@@ -1,0 +1,1232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panggilan Rasmi</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#f4f2ec;
+    --surface:#ffffff;
+    --surface-2:#eae6da;
+    --ink:#1c2333;
+    --ink-soft:#5a6178;
+    --accent:#a8792f;
+    --accent-ink:#6b4e1f;
+    --accent-soft:#f1e4c8;
+    --line:#ddd6c4;
+    --danger:#a13f3f;
+    --good:#2f8f5b;
+    --shadow: 0 1px 2px rgba(28,35,51,.06), 0 8px 24px -12px rgba(28,35,51,.18);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12141c;
+      --surface:#191c28;
+      --surface-2:#20232f;
+      --ink:#eef0f5;
+      --ink-soft:#9aa0b6;
+      --accent:#d3a54c;
+      --accent-ink:#f0cf8a;
+      --accent-soft:#332b18;
+      --line:#2c3040;
+      --danger:#e08585;
+      --good:#4fd08a;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 30px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12141c;
+    --surface:#191c28;
+    --surface-2:#20232f;
+    --ink:#eef0f5;
+    --ink-soft:#9aa0b6;
+    --accent:#d3a54c;
+    --accent-ink:#f0cf8a;
+    --accent-soft:#332b18;
+    --line:#2c3040;
+    --danger:#e08585;
+    --good:#4fd08a;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 30px -14px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box;}
+  [hidden]{display:none!important;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--accent-soft); }
+
+  .label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    display:block;
+    margin-bottom:6px;
+  }
+
+  header.app-head{
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    padding:22px clamp(16px,4vw,40px) 18px;
+    border-bottom:1px solid var(--line);
+  }
+  header.app-head .crest{
+    width:34px;height:34px;border-radius:50%;
+    background:linear-gradient(155deg,var(--accent),var(--accent-ink));
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-family:'Source Serif 4',serif;font-weight:700;font-size:16px;
+    flex:none;
+    box-shadow:var(--shadow);
+  }
+  header.app-head h1{
+    font-family:'Source Serif 4', serif;
+    font-weight:600;
+    font-size:22px;
+    margin:0;
+    letter-spacing:.005em;
+  }
+  header.app-head .tagline{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin:0;
+  }
+
+  /* Preview (stage) always sits above the controls (rail), stacked in
+     document/visual order — the live preview is the first thing visible
+     on the page, with the editing panel scrolling below it. */
+  .shell{
+    display:flex;
+    flex-direction:column;
+    min-height:calc(100vh - 78px);
+  }
+
+  .rail{
+    border-top:1px solid var(--line);
+    padding:22px 20px 60px;
+    display:flex;
+    flex-direction:column;
+    gap:26px;
+    max-width:640px;
+    margin:0 auto;
+    width:100%;
+  }
+
+  .field-group{ display:flex; flex-direction:column; gap:14px; }
+  .field-group h2{
+    font-family:'Source Serif 4', serif;
+    font-size:15px;
+    font-weight:600;
+    margin:0 0 2px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .field-group h2 .n{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--accent-ink);
+    background:var(--accent-soft);
+    border-radius:5px;
+    padding:1px 6px;
+  }
+
+  .upload-box{
+    border:1.5px dashed var(--line);
+    border-radius:12px;
+    padding:16px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    cursor:pointer;
+    background:var(--surface);
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .upload-box:hover{ border-color:var(--accent); background:var(--accent-soft); }
+  .upload-box input{ display:none; }
+  .upload-box .thumb{
+    width:44px;height:44px;border-radius:8px;
+    background:var(--surface-2);
+    background-size:cover;background-position:center;
+    flex:none;
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;color:var(--ink-soft);
+  }
+  .upload-box .txt{ font-size:13px; line-height:1.35; }
+  .upload-box .txt b{ display:block; font-weight:600; }
+  .upload-box .txt span{ color:var(--ink-soft); font-size:12px; }
+
+  input[type=text], select{
+    width:100%;
+    font:inherit;
+    font-size:14px;
+    padding:10px 12px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--ink);
+  }
+  input[type=text]:focus, select:focus, button:focus-visible, .swatch:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:1px;
+  }
+
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+  .corner-pick{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    aspect-ratio:16/10;
+    background:var(--surface-2);
+    border-radius:12px;
+    padding:8px;
+  }
+  .corner-pick button{
+    border:1.5px solid transparent;
+    border-radius:8px;
+    background:var(--surface);
+    cursor:pointer;
+    display:flex;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    letter-spacing:.05em;
+    color:var(--ink-soft);
+    padding:8px;
+  }
+  .corner-pick button[data-corner="tl"]{ align-items:flex-start; justify-content:flex-start; }
+  .corner-pick button[data-corner="tr"]{ align-items:flex-start; justify-content:flex-end; text-align:right; }
+  .corner-pick button[data-corner="bl"]{ align-items:flex-end; justify-content:flex-start; }
+  .corner-pick button[data-corner="br"]{ align-items:flex-end; justify-content:flex-end; text-align:right; }
+  .corner-pick button.active{
+    border-color:var(--accent);
+    background:var(--accent-soft);
+    color:var(--accent-ink);
+    font-weight:600;
+  }
+
+  .slider-row{ display:flex; flex-direction:column; gap:6px; }
+  .slider-row .top{ display:flex; justify-content:space-between; align-items:baseline; }
+  .slider-row output{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); }
+  input[type=range]{ width:100%; accent-color:var(--accent); }
+
+  .toolbtns{ display:flex; gap:8px; }
+  .toolbtns button{
+    flex:1;
+    padding:9px 8px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--ink);
+    font:inherit;
+    font-size:12.5px;
+    font-weight:500;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+  }
+  .toolbtns button.active{ background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  .toolbtns button:disabled{ opacity:.4; cursor:not-allowed; }
+
+  .cutout-preview{
+    position:relative;
+    width:150px;
+    border-radius:12px;
+    overflow:hidden;
+    border:1px solid var(--line);
+    background:
+      linear-gradient(45deg,#00000014 25%,transparent 25%,transparent 75%,#00000014 75%),
+      linear-gradient(45deg,#00000014 25%,transparent 25%,transparent 75%,#00000014 75%);
+    background-size:16px 16px;
+    background-position:0 0, 8px 8px;
+    touch-action:none;
+    cursor:crosshair;
+  }
+  .cutout-preview canvas{ display:block; width:100%; height:auto; }
+  .cutout-preview .empty{
+    display:flex;align-items:center;justify-content:center;
+    aspect-ratio:4/3;
+    color:var(--ink-soft);
+    font-size:10.5px;
+    text-align:center;
+    padding:10px;
+  }
+
+  .hint{ font-size:11.5px; color:var(--ink-soft); line-height:1.5; }
+
+  .precut-note{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    font-size:12px;
+    color:var(--accent-ink);
+    background:var(--accent-soft);
+    border-radius:9px;
+    padding:9px 10px;
+  }
+  .precut-note button{ padding:5px 9px; font-size:11.5px; flex:none; }
+
+  .ai-tip{
+    border-radius:10px;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    padding:12px 13px;
+  }
+  .ai-tip-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--accent-ink);
+  }
+  .ai-tip p{ margin:6px 0 0; font-size:12px; line-height:1.55; color:var(--ink-soft); }
+
+  button.primary{
+    font:inherit;
+    font-weight:600;
+    font-size:14px;
+    padding:12px 16px;
+    border-radius:9px;
+    border:none;
+    background:var(--ink);
+    color:var(--bg);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+  }
+  button.primary:disabled{ opacity:.45; cursor:not-allowed; }
+  button.ghost{
+    font:inherit; font-size:13px; font-weight:500;
+    padding:9px 14px; border-radius:9px;
+    border:1px solid var(--line); background:transparent; color:var(--ink-soft);
+    cursor:pointer;
+  }
+
+  .stage{
+    padding:clamp(20px,4vw,48px);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:18px;
+  }
+  .stage-toolbar{
+    width:100%;
+    max-width:640px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .stage-toolbar .ratio-select{ display:flex; gap:6px; }
+  .stage-toolbar .ratio-select button{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    padding:6px 10px;
+    border-radius:7px;
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .stage-toolbar .ratio-select button.active{ background:var(--ink); color:var(--bg); border-color:var(--ink); }
+
+  .canvas-mat{
+    background:var(--surface);
+    border-radius:18px;
+    box-shadow:var(--shadow);
+    padding:14px;
+    border:1px solid var(--line);
+  }
+  #finalCanvas{
+    display:block;
+    width:auto;
+    height:auto;
+    /* Scales against BOTH viewport width and height, so a tall export
+       (9:16, 4:5) shrinks to fit a short screen instead of overflowing it
+       the way a width-only cap would. */
+    max-width:min(70vw, 560px);
+    max-height:min(56vh, 600px);
+    border-radius:9px;
+    background:#1a1a1a;
+  }
+
+  .status{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    display:flex;
+    gap:6px;
+    align-items:center;
+  }
+  .status .dot{ width:6px;height:6px;border-radius:50%; background:var(--good); }
+
+  footer.credit{
+    text-align:center;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    padding:10px 0 30px;
+  }
+</style>
+</head>
+<body>
+
+
+<header class="app-head">
+  <div class="crest">PR</div>
+  <div>
+    <h1>Panggilan Rasmi</h1>
+    <p class="tagline">Official-call graphic composer &mdash; visual design desk</p>
+  </div>
+</header>
+
+<div class="shell">
+  <main class="stage">
+    <div class="stage-toolbar">
+      <span class="label" style="margin:0">Live preview</span>
+      <div class="ratio-select" id="ratioSelect">
+        <button type="button" data-ratio="3:2" class="active">3:2</button>
+        <button type="button" data-ratio="4:5">4:5</button>
+        <button type="button" data-ratio="1:1">1:1</button>
+        <button type="button" data-ratio="9:16">9:16</button>
+      </div>
+    </div>
+    <div class="canvas-mat">
+      <canvas id="finalCanvas" width="1350" height="900"></canvas>
+    </div>
+  </main>
+
+  <aside class="rail">
+
+    <div class="field-group">
+      <h2><span class="n">1</span> Scene photograph</h2>
+      <label class="upload-box" id="sceneUploadBox">
+        <input type="file" id="sceneInput" accept="image/*">
+        <span class="thumb" id="sceneThumb">&#128247;</span>
+        <span class="txt"><b id="sceneUploadLabel">Upload the desk / office shot</b><span>The photo the caller card sits on top of</span></span>
+      </label>
+    </div>
+
+    <div class="field-group">
+      <h2><span class="n">2</span> Caller photograph</h2>
+      <label class="upload-box" id="cutoutUploadBox">
+        <input type="file" id="cutoutInput" accept="image/*">
+        <span class="thumb" id="cutoutThumb">&#128100;</span>
+        <span class="txt"><b id="cutoutUploadLabel">Upload the caller's photo</b><span>Transparent PNGs are used as-is</span></span>
+      </label>
+
+      <div class="cutout-preview" id="cutoutPreviewWrap">
+        <div class="empty">Preview appears here once a caller photo is uploaded.</div>
+      </div>
+
+      <div class="slider-row" id="zoomRow">
+        <div class="top"><span class="label" style="margin:0">Zoom</span><output id="zoomOut">100%</output></div>
+        <input type="range" id="zoomSlider" min="100" max="300" value="100" disabled>
+      </div>
+      <p class="hint" id="reframeHint">Drag the photo to reposition, and use Zoom to crop in tighter. Every upload is normalized to a horizontal frame.</p>
+
+      <div class="ai-tip">
+        <span class="ai-tip-label">Want a background cutout?</span>
+        <p>There's no way for this page to reach an AI cutout model directly — but Claude can. Send the caller's photo in the chat and ask for the background removed, then upload the transparent PNG that comes back here. It's used as-is, with no further processing.</p>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <h2><span class="n">3</span> Caller card</h2>
+      <div>
+        <span class="label">Name</span>
+        <input type="text" id="nameInput" placeholder="e.g. Shehbaz Sharif">
+      </div>
+      <div>
+        <span class="label">Title / role</span>
+        <input type="text" id="titleInput" placeholder="e.g. Perdana Menteri Pakistan">
+      </div>
+      <div>
+        <span class="label">Country</span>
+        <select id="countrySelect"></select>
+      </div>
+      <div>
+        <span class="label">Flag image (optional)</span>
+        <label class="upload-box" id="flagUploadBox">
+          <input type="file" id="flagInput" accept="image/*">
+          <span class="thumb" id="flagThumb">&#127987;</span>
+          <span class="txt"><b id="flagUploadLabel">Upload a waving flag photo</b><span>Used with a black gradient behind the card text</span></span>
+        </label>
+        <button type="button" class="ghost" id="clearFlag" style="margin-top:8px;display:none;">Remove uploaded flag</button>
+      </div>
+      <div class="slider-row" id="flagPosRow" hidden>
+        <div class="top"><span class="label" style="margin:0">Flag position</span><output id="flagPosOut">50</output></div>
+        <input type="range" id="flagPosSlider" min="0" max="100" value="50">
+      </div>
+      <div class="slider-row" id="gradientReachRow" hidden>
+        <div class="top"><span class="label" style="margin:0">Gradient reach</span><output id="gradientReachOut">55</output></div>
+        <input type="range" id="gradientReachSlider" min="15" max="100" value="55">
+      </div>
+      <div class="row2">
+        <div>
+          <span class="label">Card background</span>
+          <select id="cardTone">
+            <option value="dark" selected>Charcoal</option>
+            <option value="flag">Flag photo</option>
+          </select>
+        </div>
+        <div>
+          <span class="label">Call state</span>
+          <select id="callState">
+            <option value="connecting" selected>Connecting&hellip;</option>
+            <option value="live">Live</option>
+            <option value="none">No badge</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <h2><span class="n">4</span> Placement</h2>
+      <div class="corner-pick" id="cornerPick">
+        <button type="button" data-corner="tl" class="active">TOP&nbsp;LEFT</button>
+        <button type="button" data-corner="tr">TOP&nbsp;RIGHT</button>
+        <button type="button" data-corner="bl">BOTTOM&nbsp;LEFT</button>
+        <button type="button" data-corner="br">BOTTOM&nbsp;RIGHT</button>
+      </div>
+      <div class="slider-row">
+        <div class="top"><span class="label" style="margin:0">Inset size</span><output id="scaleOut">100</output></div>
+        <input type="range" id="scaleSlider" min="60" max="150" value="100">
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="borderToggle" checked style="width:auto;">
+        <span style="font-size:12.5px;color:var(--ink-soft);">Show white border around photo</span>
+      </label>
+    </div>
+
+    <div class="field-group">
+      <button class="primary" id="downloadBtn" disabled>&#8681; Save composed graphic</button>
+      <div class="status" id="statusLine"><span class="dot"></span><span>Upload a scene photograph to begin.</span></div>
+    </div>
+  </aside>
+</div>
+<footer class="credit">Internal tool &middot; PMO Visual Design Desk</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var COUNTRIES = [
+    ["MY","Malaysia","🇲🇾"],
+    ["US","United States","🇺🇸"],
+    ["PK","Pakistan","🇵🇰"],
+    ["EG","Egypt","🇪🇬"],
+    ["SA","Saudi Arabia","🇸🇦"],
+    ["QA","Qatar","🇶🇦"],
+    ["AE","UAE","🇦🇪"],
+    ["TR","Türkiye","🇹🇷"],
+    ["ID","Indonesia","🇮🇩"],
+    ["SG","Singapore","🇸🇬"],
+    ["CN","China","🇨🇳"],
+    ["JP","Japan","🇯🇵"],
+    ["KR","South Korea","🇰🇷"],
+    ["GB","United Kingdom","🇬🇧"],
+    ["FR","France","🇫🇷"],
+    ["DE","Germany","🇩🇪"],
+    ["JO","Jordan","🇯🇴"],
+    ["PS","Palestine","🇵🇸"],
+    ["OTHER","Other / custom","🏳️"]
+  ];
+
+  var els = {};
+  ["sceneInput","sceneThumb","sceneUploadLabel","cutoutInput","cutoutThumb","cutoutUploadLabel",
+   "cutoutPreviewWrap",
+   "zoomRow","zoomSlider","zoomOut","reframeHint",
+   "nameInput","titleInput","countrySelect",
+   "flagInput","flagThumb","flagUploadLabel","clearFlag","cardTone","callState",
+   "flagPosRow","flagPosSlider","flagPosOut","gradientReachRow","gradientReachSlider","gradientReachOut",
+   "cornerPick","scaleSlider","scaleOut","borderToggle","downloadBtn","statusLine","finalCanvas","ratioSelect"
+  ].forEach(function(id){ els[id] = document.getElementById(id); });
+
+  var state = {
+    sceneImg: null,
+    cropSourceImg: null,  // uploaded caller photo (plain <img>), never mutated
+    fullW: 0, fullH: 0,        // working resolution the crop/zoom view is windowed from
+    cutoutSourceCanvas: null,  // full-res canvas holding the photo as uploaded (its own
+                                // alpha channel is used as-is — no automatic cutout)
+    cropZoom: 1,           // 1 = fitted ("cover") to the 233-wide frame
+    cropX: 0, cropY: 0,    // top-left of the drawn image within the frame, in frame px
+    cutoutImg: null,
+    cutoutW: 0, cutoutH: 0,
+    origData: null,       // ImageData of the caller photo at the current crop/zoom
+    corner: "tl",
+    insetScale: 1.0,
+    showBorder: true,
+    flagPos: 0.5,          // 0 = flag photo's left edge shown, 1 = right edge shown
+    gradientReach: 0.55,   // fraction of the card width the black gradient covers before fading out
+    ratio: "3:2",
+    name: "",
+    title: "",
+    country: COUNTRIES[0],
+    flagImg: null,
+    cardTone: "dark",
+    callState: "connecting"
+  };
+
+  function setStatus(text, ok){
+    els.statusLine.querySelector("span:last-child").textContent = text;
+    els.statusLine.querySelector(".dot").style.background = ok === false ? "var(--danger)" : "var(--good)";
+  }
+
+  // ---------- country select ----------
+  COUNTRIES.forEach(function(c, i){
+    var opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = c[2] + "  " + c[1];
+    els.countrySelect.appendChild(opt);
+  });
+  els.countrySelect.addEventListener("change", function(){
+    state.country = COUNTRIES[+els.countrySelect.value];
+    renderFinal();
+  });
+
+  // ---------- flag image upload ----------
+  els.flagInput.addEventListener("change", function(e){
+    var f = e.target.files[0];
+    if(!f) return;
+    var url = URL.createObjectURL(f);
+    var img = new Image();
+    img.onload = function(){
+      state.flagImg = img;
+      els.flagThumb.style.backgroundImage = "url(" + url + ")";
+      els.flagThumb.textContent = "";
+      els.flagUploadLabel.textContent = f.name;
+      els.clearFlag.style.display = "inline-block";
+      els.flagPosRow.hidden = false;
+      els.gradientReachRow.hidden = false;
+      els.cardTone.value = "flag";
+      state.cardTone = "flag";
+      renderFinal();
+    };
+    img.src = url;
+  });
+  els.clearFlag.addEventListener("click", function(){
+    state.flagImg = null;
+    els.flagInput.value = "";
+    els.flagThumb.style.backgroundImage = "";
+    els.flagThumb.textContent = "🏳️";
+    els.flagUploadLabel.textContent = "Upload a waving flag photo";
+    els.clearFlag.style.display = "none";
+    els.flagPosRow.hidden = true;
+    els.gradientReachRow.hidden = true;
+    if(state.cardTone === "flag"){ els.cardTone.value = "dark"; state.cardTone = "dark"; }
+    renderFinal();
+  });
+  els.flagPosSlider.addEventListener("input", function(){
+    state.flagPos = (+els.flagPosSlider.value)/100;
+    els.flagPosOut.textContent = els.flagPosSlider.value;
+    renderFinal();
+  });
+  els.gradientReachSlider.addEventListener("input", function(){
+    state.gradientReach = (+els.gradientReachSlider.value)/100;
+    els.gradientReachOut.textContent = els.gradientReachSlider.value;
+    renderFinal();
+  });
+
+  // ---------- scene upload ----------
+  els.sceneInput.addEventListener("change", function(e){
+    var f = e.target.files[0];
+    if(!f) return;
+    var url = URL.createObjectURL(f);
+    var img = new Image();
+    img.onload = function(){
+      state.sceneImg = img;
+      els.sceneThumb.style.backgroundImage = "url(" + url + ")";
+      els.sceneThumb.textContent = "";
+      els.sceneUploadLabel.textContent = f.name;
+      setStatus("Scene loaded — add the caller's photo next.");
+      renderFinal();
+    };
+    img.src = url;
+  });
+
+  // ---------- cutout upload + reframe (crop/zoom) + background removal ----------
+  var workCanvas = document.createElement("canvas");
+  var previewCanvas = document.createElement("canvas");
+  var CUTOUT_W = 233;              // every caller photo is normalized to this width
+  var CROP_ASPECT = 4/3;           // width:height of the working frame — horizontal, like a video-call thumbnail
+  var CUTOUT_H = Math.round(CUTOUT_W / CROP_ASPECT);
+
+  function baseScaleFor(w, h){
+    // "cover" scale: smallest zoom that still fills the whole frame
+    return Math.max(CUTOUT_W/w, CUTOUT_H/h);
+  }
+
+  function resetCropToFit(w, h){
+    state.cropZoom = 1;
+    var s = baseScaleFor(w, h);
+    var iw = w*s, ih = h*s;
+    state.cropX = (CUTOUT_W-iw)/2;
+    state.cropY = (CUTOUT_H-ih)/2;
+  }
+
+  function clampCrop(){
+    var s = baseScaleFor(state.fullW, state.fullH) * state.cropZoom;
+    var iw = state.fullW*s, ih = state.fullH*s;
+    state.cropX = Math.min(0, Math.max(CUTOUT_W-iw, state.cropX));
+    state.cropY = Math.min(0, Math.max(CUTOUT_H-ih, state.cropY));
+  }
+
+  function setZoom(zoomPct){
+    if(!state.fullW) return;
+    var base = baseScaleFor(state.fullW, state.fullH);
+    var sOld = base*state.cropZoom;
+    var cx = (CUTOUT_W/2 - state.cropX)/sOld;
+    var cy = (CUTOUT_H/2 - state.cropY)/sOld;
+    state.cropZoom = Math.max(1, zoomPct/100);
+    var sNew = base*state.cropZoom;
+    state.cropX = CUTOUT_W/2 - cx*sNew;
+    state.cropY = CUTOUT_H/2 - cy*sNew;
+    clampCrop();
+    redrawCropBitmap();
+  }
+
+  function panBy(dxFrame, dyFrame){
+    state.cropX += dxFrame;
+    state.cropY += dyFrame;
+    clampCrop();
+    redrawCropBitmap();
+  }
+
+  // Cheap: just windows the current crop/zoom/pan into the 233-wide working
+  // bitmap from the full-resolution source canvas. The photo's own alpha
+  // channel (transparent PNG or fully opaque) is used as-is — there's no
+  // automatic background removal here.
+  function redrawCropBitmap(){
+    if(!state.cutoutSourceCanvas) return;
+    workCanvas.width = CUTOUT_W; workCanvas.height = CUTOUT_H;
+    var ctx = workCanvas.getContext("2d");
+    ctx.clearRect(0,0,CUTOUT_W,CUTOUT_H);
+    var s = baseScaleFor(state.fullW, state.fullH) * state.cropZoom;
+    ctx.drawImage(state.cutoutSourceCanvas, state.cropX, state.cropY, state.fullW*s, state.fullH*s);
+
+    state.cutoutImg = workCanvas;
+    state.cutoutW = CUTOUT_W; state.cutoutH = CUTOUT_H;
+    state.origData = ctx.getImageData(0, 0, CUTOUT_W, CUTOUT_H);
+
+    renderCutoutPreview();
+    renderFinal();
+  }
+
+  els.cutoutInput.addEventListener("change", function(e){
+    var f = e.target.files[0];
+    if(!f) return;
+    var url = URL.createObjectURL(f);
+    var img = new Image();
+    img.onload = function(){
+      state.cropSourceImg = img;
+
+      // Build a full-resolution working copy (capped for perf) that keeps the
+      // photo's real aspect ratio intact. Its own alpha channel (if any) is
+      // preserved as-is — an already-transparent PNG stays transparent, an
+      // opaque photo stays opaque.
+      var FULL_MAX = 640;
+      var fScale = Math.min(1, FULL_MAX / Math.max(img.width, img.height));
+      state.fullW = Math.max(1, Math.round(img.width*fScale));
+      state.fullH = Math.max(1, Math.round(img.height*fScale));
+      var fullCanvas = document.createElement("canvas");
+      fullCanvas.width = state.fullW; fullCanvas.height = state.fullH;
+      var fctx = fullCanvas.getContext("2d");
+      fctx.drawImage(img, 0, 0, state.fullW, state.fullH);
+      state.cutoutSourceCanvas = fullCanvas;
+
+      resetCropToFit(state.fullW, state.fullH);
+      els.zoomSlider.value = 100;
+      els.zoomOut.textContent = "100%";
+
+      els.cutoutThumb.style.backgroundImage = "url(" + url + ")";
+      els.cutoutThumb.textContent = "";
+      els.cutoutUploadLabel.textContent = f.name;
+      els.zoomSlider.disabled = false;
+
+      buildCutoutPreviewCanvas();
+      redrawCropBitmap();
+      setStatus("Caller photo loaded — drag and zoom to reframe.");
+    };
+    img.src = url;
+  });
+
+  els.zoomSlider.addEventListener("input", function(){
+    els.zoomOut.textContent = els.zoomSlider.value + "%";
+    setZoom(+els.zoomSlider.value);
+  });
+
+  function buildCutoutPreviewCanvas(){
+    els.cutoutPreviewWrap.innerHTML = "";
+    previewCanvas.width = state.cutoutW || CUTOUT_W;
+    previewCanvas.height = state.cutoutH || CUTOUT_H;
+    previewCanvas.style.width = "100%";
+    els.cutoutPreviewWrap.appendChild(previewCanvas);
+    attachPreviewPointerEvents();
+  }
+
+  // view-space (233x175) alpha is already baked into state.origData by
+  // redrawCropBitmap, since it windows the alpha-baked cutoutSourceCanvas
+  function currentAlphaAt(i){
+    return state.origData.data[i*4+3];
+  }
+
+  function renderCutoutPreview(){
+    if(!state.origData) return;
+    var pctx = previewCanvas.getContext("2d");
+    pctx.putImageData(state.origData, 0, 0);
+  }
+
+  // Dragging the preview canvas always pans/repositions the photo within
+  // its frame (there's no separate erase/restore paint mode).
+  function attachPreviewPointerEvents(){
+    var dragging = false;
+    var lastX = 0, lastY = 0;
+
+    function down(e){
+      if(!state.cutoutImg) return;
+      dragging = true;
+      var p = e.touches ? e.touches[0] : e;
+      lastX = p.clientX; lastY = p.clientY;
+      e.preventDefault();
+    }
+    function move(e){
+      if(!dragging) return;
+      var p = e.touches ? e.touches[0] : e;
+      var rect = previewCanvas.getBoundingClientRect();
+      var scale = state.cutoutW / rect.width;
+      panBy((p.clientX-lastX)*scale, (p.clientY-lastY)*scale);
+      lastX = p.clientX; lastY = p.clientY;
+      e.preventDefault();
+    }
+    function up(){ dragging = false; }
+    previewCanvas.addEventListener("pointerdown", down);
+    previewCanvas.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  }
+
+  // ---------- text + placement ----------
+  els.nameInput.addEventListener("input", function(){ state.name = els.nameInput.value; renderFinal(); });
+  els.titleInput.addEventListener("input", function(){ state.title = els.titleInput.value; renderFinal(); });
+  els.cardTone.addEventListener("change", function(){ state.cardTone = els.cardTone.value; renderFinal(); });
+  els.callState.addEventListener("change", function(){ state.callState = els.callState.value; renderFinal(); });
+  els.scaleSlider.addEventListener("input", function(){
+    state.insetScale = (+els.scaleSlider.value)/100;
+    els.scaleOut.textContent = els.scaleSlider.value;
+    renderFinal();
+  });
+  els.borderToggle.addEventListener("change", function(){
+    state.showBorder = els.borderToggle.checked;
+    renderFinal();
+  });
+
+  els.cornerPick.addEventListener("click", function(e){
+    var btn = e.target.closest("button[data-corner]");
+    if(!btn) return;
+    state.corner = btn.getAttribute("data-corner");
+    els.cornerPick.querySelectorAll("button").forEach(function(b){ b.classList.toggle("active", b===btn); });
+    renderFinal();
+  });
+
+  // Each preset ships its own real export resolution rather than a shared
+  // base width, so "3:2" comes out at the studio's standard 1350x900
+  // instead of a scaled-down stand-in.
+  var RATIOS = {
+    "3:2":  [1350, 900],
+    "4:5":  [1080, 1350],
+    "1:1":  [1080, 1080],
+    "9:16": [1080, 1920]
+  };
+  els.ratioSelect.addEventListener("click", function(e){
+    var btn = e.target.closest("button[data-ratio]");
+    if(!btn) return;
+    state.ratio = btn.getAttribute("data-ratio");
+    els.ratioSelect.querySelectorAll("button").forEach(function(b){ b.classList.toggle("active", b===btn); });
+    var dims = RATIOS[state.ratio];
+    els.finalCanvas.width = dims[0];
+    els.finalCanvas.height = dims[1];
+    renderFinal();
+  });
+
+  // ---------- final compose ----------
+  function tightBoundingCanvas(){
+    // crop the cutout to the bounding box of opaque pixels for a snug inset
+    var w = state.cutoutW, h = state.cutoutH;
+    var minX=w, minY=h, maxX=0, maxY=0, found=false;
+    for(var y=0;y<h;y++){
+      for(var x=0;x<w;x++){
+        if(currentAlphaAt(y*w+x) > 10){
+          found = true;
+          if(x<minX)minX=x; if(x>maxX)maxX=x;
+          if(y<minY)minY=y; if(y>maxY)maxY=y;
+        }
+      }
+    }
+    if(!found){ minX=0;minY=0;maxX=w-1;maxY=h-1; }
+    var pad = Math.round(Math.max(maxX-minX,maxY-minY) * 0.03);
+    minX = Math.max(0,minX-pad); minY = Math.max(0,minY-pad);
+    maxX = Math.min(w-1,maxX+pad); maxY = Math.min(h-1,maxY+pad);
+    var cw = maxX-minX+1, ch = maxY-minY+1;
+
+    var full = document.createElement("canvas");
+    full.width = w; full.height = h;
+    var fctx = full.getContext("2d");
+    var imgData = fctx.createImageData(w,h);
+    var src = state.origData.data;
+    for(var i=0;i<w*h;i++){
+      imgData.data[i*4]=src[i*4]; imgData.data[i*4+1]=src[i*4+1];
+      imgData.data[i*4+2]=src[i*4+2]; imgData.data[i*4+3]=currentAlphaAt(i);
+    }
+    fctx.putImageData(imgData,0,0);
+
+    var out = document.createElement("canvas");
+    out.width = cw; out.height = ch;
+    out.getContext("2d").drawImage(full, minX, minY, cw, ch, 0, 0, cw, ch);
+    return out;
+  }
+
+  function roundRectPath(ctx,x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  // "cover" fit, with an optional horizontal pan (0 = image's left edge
+  // shown, 0.5 = centered, 1 = image's right edge shown). Vertical stays
+  // centered.
+  function drawImageCover(ctx, img, x, y, w, h, panT){
+    var s = Math.max(w/img.width, h/img.height);
+    var iw = img.width*s, ih = img.height*s;
+    var t = panT === undefined ? 0.5 : panT;
+    var slackX = iw - w;
+    ctx.drawImage(img, x - slackX*t, y+(h-ih)/2, iw, ih);
+  }
+
+  function renderFinal(){
+    var canvas = els.finalCanvas;
+    var ctx = canvas.getContext("2d");
+    var W = canvas.width, H = canvas.height;
+    ctx.clearRect(0,0,W,H);
+
+    // scene
+    ctx.fillStyle = "#0d0f14";
+    ctx.fillRect(0,0,W,H);
+    if(state.sceneImg){
+      var img = state.sceneImg;
+      var s = Math.max(W/img.width, H/img.height);
+      var iw = img.width*s, ih = img.height*s;
+      ctx.drawImage(img, (W-iw)/2, (H-ih)/2, iw, ih);
+    } else {
+      ctx.fillStyle = "#3a4152";
+      ctx.font = "500 16px 'IBM Plex Sans'";
+      ctx.textAlign = "center";
+      ctx.fillText("Upload a scene photograph", W/2, H/2);
+    }
+
+    if(!state.cutoutImg){
+      updateDownloadState();
+      return;
+    }
+
+    var cut = tightBoundingCanvas();
+    var margin = Math.round(W*0.045);
+    var insetW = Math.round(W*0.30*state.insetScale);
+    var insetH = Math.round(insetW * (cut.height/cut.width));
+    var isTop = state.corner === "tl" || state.corner === "tr";
+    var isLeft = state.corner === "tl" || state.corner === "bl";
+    var ix = isLeft ? margin : (W - margin - insetW);
+    var gap = W*0.014;
+    var hasCard = !!(state.name || state.title);
+
+    // The name/title card always sits directly BELOW the caller photo, in
+    // both top and bottom placements — so for a bottom corner the photo is
+    // lifted up to make room for the card underneath it, rather than the
+    // card sitting above the photo. Card metrics (size) are worked out here,
+    // before the photo's y-position, so the bottom-corner math can reserve
+    // exactly the right amount of space beneath the photo.
+    var cardX = 0, cardW = 0, baseH = 0, radius = 0, showIcon = false, iconW = 0,
+        textX = 0, textW = 0, padX = 0, innerW = 0, nameFont = "", titleFont = "",
+        nameLine = "", titleLines = [], nameYOffset = 0, title0YOffset = 0, titleLineStep = 0,
+        cardH = 0;
+    if(hasCard){
+      cardX = ix;
+      cardW = insetW * 1.55;
+      if(!isLeft) cardX = ix + insetW - cardW;
+      baseH = insetH * 0.46;
+      radius = baseH * 0.30;
+
+      showIcon = state.callState !== "none";
+      iconW = showIcon ? baseH : 0;
+      textX = cardX + iconW;
+      textW = cardW - iconW;
+      padX = textW*0.09;
+      innerW = textW - padX*2;
+
+      var nameFontPx = baseH*0.30;
+      var titleFontPx = baseH*0.20;
+      nameFont = "700 " + nameFontPx + "px 'Helvetica Neue', Helvetica, Arial, 'Inter', sans-serif";
+      titleFont = "400 " + titleFontPx + "px 'Helvetica Neue', Helvetica, Arial, 'Inter', sans-serif";
+
+      ctx.font = nameFont;
+      nameLine = truncateToWidth(ctx, state.name || "Name", innerW);
+
+      ctx.font = titleFont;
+      titleLines = wrapText(ctx, state.title || "Title / country", innerW, 2);
+
+      // vertical rhythm, expressed as offsets from the capsule's own top so
+      // it grows cleanly when there's a second title line
+      var topPad = baseH*0.34;
+      var gapNameToTitle = baseH*0.30;
+      titleLineStep = baseH*0.26;
+      var bottomPad = baseH*0.20;
+
+      nameYOffset = topPad;
+      title0YOffset = nameYOffset + gapNameToTitle;
+      var lastTitleYOffset = title0YOffset + (titleLines.length-1)*titleLineStep;
+      var neededH = lastTitleYOffset + bottomPad;
+      cardH = Math.max(baseH, neededH);
+
+      // When the capsule ends up taller than the text actually needs (the
+      // common single-line-title case, where cardH is clamped to baseH),
+      // re-center the whole name+title block in the extra vertical space
+      // instead of leaving it pinned to the top padding.
+      var extraV = (cardH - neededH) / 2;
+      nameYOffset += extraV;
+      title0YOffset += extraV;
+    }
+
+    var iy;
+    if(isTop){
+      iy = margin;
+    } else {
+      // bottom corner: raise the photo to leave room for the card (+gap)
+      // beneath it, so the whole photo+card group's outer edge still sits
+      // at the same margin from the canvas edge as the top placement does.
+      iy = hasCard ? (H - margin - insetH - gap - cardH) : (H - margin - insetH);
+    }
+    var cardY = hasCard ? (iy + insetH + gap) : 0;
+
+    // drop shadow + rounded frame for the cutout
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,.45)";
+    ctx.shadowBlur = W*0.02;
+    ctx.shadowOffsetY = W*0.006;
+    roundRectPath(ctx, ix, iy, insetW, insetH, W*0.012);
+    ctx.fillStyle = "#000";
+    ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    roundRectPath(ctx, ix, iy, insetW, insetH, W*0.012);
+    ctx.clip();
+    ctx.drawImage(cut, ix, iy, insetW, insetH);
+    ctx.restore();
+    if(state.showBorder){
+      ctx.save();
+      roundRectPath(ctx, ix, iy, insetW, insetH, W*0.012);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(255,255,255,.85)";
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // name capsule — the call icon and the name/flag box are one continuous
+    // pill so there's no gap or seam between them, matching the reference.
+    // The title wraps onto a second line (instead of truncating) when it's
+    // long, and the capsule grows downward/upward to fit it.
+    if(hasCard){
+      var iconY = cardY + (cardH-baseH)/2;
+
+      ctx.save();
+      ctx.shadowColor = "rgba(0,0,0,.35)";
+      ctx.shadowBlur = W*0.012;
+      ctx.shadowOffsetY = W*0.004;
+      roundRectPath(ctx, cardX, cardY, cardW, cardH, radius);
+      ctx.fillStyle = "#000";
+      ctx.fill();
+      ctx.restore();
+
+      ctx.save();
+      roundRectPath(ctx, cardX, cardY, cardW, cardH, radius);
+      ctx.clip();
+
+      // text / flag portion
+      if(state.cardTone === "flag" && state.flagImg){
+        drawImageCover(ctx, state.flagImg, textX, cardY, textW, cardH, state.flagPos);
+        // Solid black fading to fully transparent — "Gradient reach" controls
+        // how far across the card the solid black extends before it starts
+        // fading; canvas gradients clamp to the last stop, so the region
+        // beyond the fade point stays fully transparent automatically.
+        var reachX = textX + textW * state.gradientReach;
+        var grad = ctx.createLinearGradient(textX, 0, reachX, 0);
+        grad.addColorStop(0, "rgba(0,0,0,.93)");
+        grad.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(textX,cardY,textW,cardH);
+      } else {
+        ctx.fillStyle = "rgba(10,12,16,.9)";
+        ctx.fillRect(textX,cardY,textW,cardH);
+
+        // emoji flag watermark (used only when no flag photo is uploaded)
+        ctx.save();
+        ctx.globalAlpha = 0.22;
+        ctx.font = (cardH*1.5) + "px 'IBM Plex Sans', sans-serif";
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "right";
+        ctx.translate(textX+textW*1.02, cardY+cardH*0.55);
+        ctx.rotate(-0.12);
+        ctx.fillText(state.country[2], 0, 0);
+        ctx.restore();
+      }
+
+      // icon portion — drawn last so it always sits crisp against the text
+      // portion with no seam; stays a fixed square, centered in a taller capsule
+      if(showIcon){
+        var iconGrad = ctx.createLinearGradient(cardX, iconY, cardX, iconY+baseH);
+        iconGrad.addColorStop(0, state.callState === "live" ? "#1e6b3d" : "#1f5f38");
+        iconGrad.addColorStop(1, state.callState === "live" ? "#4ee08a" : "#3ddc84");
+        ctx.fillStyle = iconGrad;
+        ctx.fillRect(cardX, cardY, iconW, cardH);
+
+        var phonePath = new Path2D("M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z");
+        var pScale = (iconW*0.46)/24;
+        ctx.save();
+        ctx.translate(cardX + iconW/2 - pScale*12, iconY + baseH/2 - pScale*12);
+        ctx.scale(pScale, pScale);
+        ctx.fillStyle = "#fff";
+        ctx.fill(phonePath);
+        ctx.restore();
+      }
+
+      ctx.restore();
+
+      ctx.save();
+      roundRectPath(ctx, cardX, cardY, cardW, cardH, radius);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(255,255,255,.14)";
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.textAlign = "left";
+      ctx.textBaseline = "alphabetic";
+      ctx.fillStyle = "#fff";
+      ctx.font = nameFont;
+      ctx.fillText(nameLine, textX+padX, cardY+nameYOffset);
+
+      ctx.fillStyle = "rgba(255,255,255,.72)";
+      ctx.font = titleFont;
+      titleLines.forEach(function(line, i){
+        ctx.fillText(line, textX+padX, cardY+title0YOffset+i*titleLineStep);
+      });
+    }
+
+    updateDownloadState();
+  }
+
+  function truncateToWidth(ctx, text, maxW){
+    if(ctx.measureText(text).width <= maxW) return text;
+    var t = text;
+    while(t.length>1 && ctx.measureText(t+"…").width > maxW){ t = t.slice(0,-1); }
+    return t + "…";
+  }
+
+  // Greedy word-wrap up to maxLines. If the text needs more lines than that,
+  // the last line is truncated with an ellipsis instead of overflowing.
+  // ctx.font must already be set to the font this text will render in.
+  function wrapText(ctx, text, maxWidth, maxLines){
+    var words = String(text).split(/\s+/).filter(Boolean);
+    if(words.length === 0) return [""];
+    var lines = [];
+    var current = "";
+    words.forEach(function(word){
+      var test = current ? current + " " + word : word;
+      if(!current || ctx.measureText(test).width <= maxWidth){
+        current = test;
+      } else {
+        lines.push(current);
+        current = word;
+      }
+    });
+    if(current) lines.push(current);
+
+    if(lines.length <= maxLines) return lines;
+
+    var shown = lines.slice(0, maxLines);
+    var remainder = lines.slice(maxLines - 1).join(" ");
+    shown[maxLines - 1] = truncateToWidth(ctx, remainder, maxWidth);
+    return shown;
+  }
+
+  function updateDownloadState(){
+    var ready = !!state.sceneImg;
+    els.downloadBtn.disabled = !ready;
+  }
+
+  // ---------- download ----------
+  var downloadsCap = null;
+  var capReady = false;
+  if(window.claude && typeof window.claude.use === "function"){
+    window.claude.use("downloads").then(function(ns){ downloadsCap = ns; capReady = true; })
+      .catch(function(){ capReady = true; });
+  } else { capReady = true; }
+
+  els.downloadBtn.addEventListener("click", function(){
+    els.finalCanvas.toBlob(function(blob){
+      var filename = "panggilan-" + (state.name ? state.name.toLowerCase().replace(/[^a-z0-9]+/g,"-") : "rasmi") + ".png";
+      if(downloadsCap){
+        // Running inside the Claude artifact sandbox — go through its
+        // save-confirmation flow.
+        setStatus("Waiting for your confirmation to save…");
+        downloadsCap.save({ filename: filename, data: blob }).then(function(){
+          setStatus("Saved " + filename);
+        }).catch(function(err){
+          if(err && err.code === "declined"){ setStatus("Save cancelled."); }
+          else { setStatus("Couldn't save automatically — right-click the preview to save it manually.", false); }
+        });
+      } else if(window.claude && typeof window.claude.use === "function"){
+        // The claude.use API exists but the downloads capability wasn't
+        // granted — no browser download fallback is reliable inside that
+        // sandbox, so just point the user at the manual option.
+        setStatus("Saving isn't available in this view — right-click the preview to save it manually.", false);
+      } else {
+        // A normal browser (e.g. this page hosted standalone) — a plain
+        // download link works fine here.
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+        setStatus("Saved " + filename);
+      }
+    }, "image/png");
+  });
+
+  renderFinal();
+  // re-draw once web fonts finish loading so the card text doesn't render
+  // in a fallback face on first paint
+  if(document.fonts && document.fonts.ready){
+    document.fonts.ready.then(renderFinal).catch(function(){});
+  }
+})();
+</script>
+
+</body>
+</html>
