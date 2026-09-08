@@ -465,6 +465,10 @@
         </label>
         <button type="button" class="ghost" id="clearFlag" style="margin-top:8px;display:none;">Remove uploaded flag</button>
       </div>
+      <div class="slider-row" id="flagZoomRow" hidden>
+        <div class="top"><span class="label" style="margin:0">Flag zoom</span><output id="flagZoomOut">100%</output></div>
+        <input type="range" id="flagZoomSlider" min="100" max="300" value="100">
+      </div>
       <div class="slider-row" id="flagPosRow" hidden>
         <div class="top"><span class="label" style="margin:0">Flag position</span><output id="flagPosOut">50</output></div>
         <input type="range" id="flagPosSlider" min="0" max="100" value="50">
@@ -554,6 +558,7 @@
    "zoomRow","zoomSlider","zoomOut","reframeHint",
    "nameInput","titleInput","countrySelect",
    "flagInput","flagThumb","flagUploadLabel","clearFlag","cardTone","callState",
+   "flagZoomRow","flagZoomSlider","flagZoomOut",
    "flagPosRow","flagPosSlider","flagPosOut","gradientReachRow","gradientReachSlider","gradientReachOut",
    "gradientOpacityRow","gradientOpacitySlider","gradientOpacityOut",
    "cornerPick","scaleSlider","scaleOut","borderToggle","downloadBtn","statusLine","finalCanvas","ratioSelect"
@@ -573,6 +578,7 @@
     corner: "tl",
     insetScale: 1.0,
     showBorder: true,
+    flagZoom: 1,           // 1 = fitted ("cover") to the card's flag/text box, up to 3x
     flagPos: 0.5,          // 0 = flag photo's left/top edge shown, 1 = right/bottom edge shown
     gradientReach: 0.55,   // fraction of the card width the black gradient covers before fading out
     gradientOpacity: 0.93, // opacity of the solid-black end of the gradient
@@ -614,6 +620,13 @@
       els.flagThumb.textContent = "";
       els.flagUploadLabel.textContent = f.name;
       els.clearFlag.style.display = "inline-block";
+      state.flagZoom = 1;
+      els.flagZoomSlider.value = 100;
+      els.flagZoomOut.textContent = "100%";
+      state.flagPos = 0.5;
+      els.flagPosSlider.value = 50;
+      els.flagPosOut.textContent = "50";
+      els.flagZoomRow.hidden = false;
       els.flagPosRow.hidden = false;
       els.gradientReachRow.hidden = false;
       els.gradientOpacityRow.hidden = false;
@@ -630,10 +643,19 @@
     els.flagThumb.textContent = "🏳️";
     els.flagUploadLabel.textContent = "Upload a waving flag photo";
     els.clearFlag.style.display = "none";
+    els.flagZoomRow.hidden = true;
     els.flagPosRow.hidden = true;
     els.gradientReachRow.hidden = true;
     els.gradientOpacityRow.hidden = true;
+    state.flagZoom = 1;
+    els.flagZoomSlider.value = 100;
+    els.flagZoomOut.textContent = "100%";
     if(state.cardTone === "flag"){ els.cardTone.value = "dark"; state.cardTone = "dark"; }
+    renderFinal();
+  });
+  els.flagZoomSlider.addEventListener("input", function(){
+    state.flagZoom = (+els.flagZoomSlider.value)/100;
+    els.flagZoomOut.textContent = els.flagZoomSlider.value + "%";
     renderFinal();
   });
   els.flagPosSlider.addEventListener("input", function(){
@@ -926,8 +948,8 @@
   // panning always happened on the axis that was already full, so the
   // slider had no visible effect. Panning whichever axis has overflow (and
   // centering the other) keeps the slider working for any image shape.
-  function drawImageCover(ctx, img, x, y, w, h, panT){
-    var s = Math.max(w/img.width, h/img.height);
+  function drawImageCover(ctx, img, x, y, w, h, panT, zoom){
+    var s = Math.max(w/img.width, h/img.height) * (zoom || 1);
     var iw = img.width*s, ih = img.height*s;
     var t = panT === undefined ? 0.5 : panT;
     var slackX = iw - w, slackY = ih - h;
@@ -1092,7 +1114,7 @@
 
       // text / flag portion
       if(state.cardTone === "flag" && state.flagImg){
-        drawImageCover(ctx, state.flagImg, textX, cardY, textW, cardH, state.flagPos);
+        drawImageCover(ctx, state.flagImg, textX, cardY, textW, cardH, state.flagPos, state.flagZoom);
         // Solid black fading to fully transparent — "Gradient reach" controls
         // how far across the card the solid black extends before it starts
         // fading; canvas gradients clamp to the last stop, so the region
