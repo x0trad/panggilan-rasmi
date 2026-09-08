@@ -354,9 +354,6 @@
     display:block;
     width:auto;
     height:auto;
-    /* Scales against BOTH viewport width and height, so a tall export
-       (9:16, 4:5) shrinks to fit a short screen instead of overflowing it
-       the way a width-only cap would. */
     max-width:min(70vw, 560px);
     max-height:min(56vh, 600px);
     border-radius:9px;
@@ -481,23 +478,6 @@
         <div class="top"><span class="label" style="margin:0">Gradient opacity</span><output id="gradientOpacityOut">93</output></div>
         <input type="range" id="gradientOpacitySlider" min="0" max="100" value="93">
       </div>
-      <div class="row2">
-        <div>
-          <span class="label">Card background</span>
-          <select id="cardTone">
-            <option value="dark" selected>Charcoal</option>
-            <option value="flag">Flag photo</option>
-          </select>
-        </div>
-        <div>
-          <span class="label">Call state</span>
-          <select id="callState">
-            <option value="connecting" selected>Connecting&hellip;</option>
-            <option value="live">Live</option>
-            <option value="none">No badge</option>
-          </select>
-        </div>
-      </div>
     </div>
 
     <div class="field-group">
@@ -557,7 +537,7 @@
    "cutoutPreviewWrap",
    "zoomRow","zoomSlider","zoomOut","reframeHint",
    "nameInput","titleInput","countrySelect",
-   "flagInput","flagThumb","flagUploadLabel","clearFlag","cardTone","callState",
+   "flagInput","flagThumb","flagUploadLabel","clearFlag",
    "flagZoomRow","flagZoomSlider","flagZoomOut",
    "flagPosRow","flagPosSlider","flagPosOut","gradientReachRow","gradientReachSlider","gradientReachOut",
    "gradientOpacityRow","gradientOpacitySlider","gradientOpacityOut",
@@ -566,29 +546,27 @@
 
   var state = {
     sceneImg: null,
-    cropSourceImg: null,  // uploaded caller photo (plain <img>), never mutated
-    fullW: 0, fullH: 0,        // working resolution the crop/zoom view is windowed from
-    cutoutSourceCanvas: null,  // full-res canvas holding the photo as uploaded (its own
-                                // alpha channel is used as-is — no automatic cutout)
-    cropZoom: 1,           // 1 = fitted ("cover") to the 233-wide frame
-    cropX: 0, cropY: 0,    // top-left of the drawn image within the frame, in frame px
+    cropSourceImg: null,
+    fullW: 0, fullH: 0,
+    cutoutSourceCanvas: null,
+    cropZoom: 1,
+    cropX: 0, cropY: 0,
     cutoutImg: null,
     cutoutW: 0, cutoutH: 0,
-    origData: null,       // ImageData of the caller photo at the current crop/zoom
+    origData: null,
     corner: "tl",
     insetScale: 1.0,
     showBorder: true,
-    flagZoom: 1,           // 1 = fitted ("cover") to the card's flag/text box, up to 3x
-    flagPos: 0.5,          // 0 = flag photo's left/top edge shown, 1 = right/bottom edge shown
-    gradientReach: 0.55,   // fraction of the card width the black gradient covers before fading out
-    gradientOpacity: 0.93, // opacity of the solid-black end of the gradient
+    flagZoom: 1,
+    flagPos: 0.5,
+    gradientReach: 0.55,
+    gradientOpacity: 0.93,
     ratio: "3:2",
     name: "",
     title: "",
     country: COUNTRIES[0],
     flagImg: null,
-    cardTone: "dark",
-    callState: "connecting"
+    cardTone: "dark"
   };
 
   function setStatus(text, ok){
@@ -596,7 +574,6 @@
     els.statusLine.querySelector(".dot").style.background = ok === false ? "var(--danger)" : "var(--good)";
   }
 
-  // ---------- country select ----------
   COUNTRIES.forEach(function(c, i){
     var opt = document.createElement("option");
     opt.value = i;
@@ -608,7 +585,6 @@
     renderFinal();
   });
 
-  // ---------- flag image upload ----------
   els.flagInput.addEventListener("change", function(e){
     var f = e.target.files[0];
     if(!f) return;
@@ -630,7 +606,6 @@
       els.flagPosRow.hidden = false;
       els.gradientReachRow.hidden = false;
       els.gradientOpacityRow.hidden = false;
-      els.cardTone.value = "flag";
       state.cardTone = "flag";
       renderFinal();
     };
@@ -650,7 +625,7 @@
     state.flagZoom = 1;
     els.flagZoomSlider.value = 100;
     els.flagZoomOut.textContent = "100%";
-    if(state.cardTone === "flag"){ els.cardTone.value = "dark"; state.cardTone = "dark"; }
+    state.cardTone = "dark";
     renderFinal();
   });
   els.flagZoomSlider.addEventListener("input", function(){
@@ -674,7 +649,6 @@
     renderFinal();
   });
 
-  // ---------- scene upload ----------
   els.sceneInput.addEventListener("change", function(e){
     var f = e.target.files[0];
     if(!f) return;
@@ -691,15 +665,13 @@
     img.src = url;
   });
 
-  // ---------- cutout upload + reframe (crop/zoom) + background removal ----------
   var workCanvas = document.createElement("canvas");
   var previewCanvas = document.createElement("canvas");
-  var CUTOUT_W = 233;              // every caller photo is normalized to this width
-  var CROP_ASPECT = 4/3;           // width:height of the working frame — horizontal, like a video-call thumbnail
+  var CUTOUT_W = 233;
+  var CROP_ASPECT = 4/3;
   var CUTOUT_H = Math.round(CUTOUT_W / CROP_ASPECT);
 
   function baseScaleFor(w, h){
-    // "cover" scale: smallest zoom that still fills the whole frame
     return Math.max(CUTOUT_W/w, CUTOUT_H/h);
   }
 
@@ -739,10 +711,6 @@
     redrawCropBitmap();
   }
 
-  // Cheap: just windows the current crop/zoom/pan into the 233-wide working
-  // bitmap from the full-resolution source canvas. The photo's own alpha
-  // channel (transparent PNG or fully opaque) is used as-is — there's no
-  // automatic background removal here.
   function redrawCropBitmap(){
     if(!state.cutoutSourceCanvas) return;
     workCanvas.width = CUTOUT_W; workCanvas.height = CUTOUT_H;
@@ -767,10 +735,6 @@
     img.onload = function(){
       state.cropSourceImg = img;
 
-      // Build a full-resolution working copy (capped for perf) that keeps the
-      // photo's real aspect ratio intact. Its own alpha channel (if any) is
-      // preserved as-is — an already-transparent PNG stays transparent, an
-      // opaque photo stays opaque.
       var FULL_MAX = 640;
       var fScale = Math.min(1, FULL_MAX / Math.max(img.width, img.height));
       state.fullW = Math.max(1, Math.round(img.width*fScale));
@@ -811,8 +775,6 @@
     attachPreviewPointerEvents();
   }
 
-  // view-space (233x175) alpha is already baked into state.origData by
-  // redrawCropBitmap, since it windows the alpha-baked cutoutSourceCanvas
   function currentAlphaAt(i){
     return state.origData.data[i*4+3];
   }
@@ -823,8 +785,6 @@
     pctx.putImageData(state.origData, 0, 0);
   }
 
-  // Dragging the preview canvas always pans/repositions the photo within
-  // its frame (there's no separate erase/restore paint mode).
   function attachPreviewPointerEvents(){
     var dragging = false;
     var lastX = 0, lastY = 0;
@@ -851,11 +811,8 @@
     window.addEventListener("pointerup", up);
   }
 
-  // ---------- text + placement ----------
   els.nameInput.addEventListener("input", function(){ state.name = els.nameInput.value; renderFinal(); });
   els.titleInput.addEventListener("input", function(){ state.title = els.titleInput.value; renderFinal(); });
-  els.cardTone.addEventListener("change", function(){ state.cardTone = els.cardTone.value; renderFinal(); });
-  els.callState.addEventListener("change", function(){ state.callState = els.callState.value; renderFinal(); });
   els.scaleSlider.addEventListener("input", function(){
     state.insetScale = (+els.scaleSlider.value)/100;
     els.scaleOut.textContent = els.scaleSlider.value;
@@ -874,9 +831,6 @@
     renderFinal();
   });
 
-  // Each preset ships its own real export resolution rather than a shared
-  // base width, so "3:2" comes out at the studio's standard 1350x900
-  // instead of a scaled-down stand-in.
   var RATIOS = {
     "3:2":  [1350, 900],
     "4:5":  [1080, 1350],
@@ -894,9 +848,7 @@
     renderFinal();
   });
 
-  // ---------- final compose ----------
   function tightBoundingCanvas(){
-    // crop the cutout to the bounding box of opaque pixels for a snug inset
     var w = state.cutoutW, h = state.cutoutH;
     var minX=w, minY=h, maxX=0, maxY=0, found=false;
     for(var y=0;y<h;y++){
@@ -941,13 +893,6 @@
     ctx.closePath();
   }
 
-  // "cover" fit, panned along whichever axis actually overflows (0 = image's
-  // left/top edge shown, 0.5 = centered, 1 = image's right/bottom edge
-  // shown). The flag/text region of the card is very wide and short, so for
-  // most photos the cover fit is width-bound with zero horizontal slack —
-  // panning always happened on the axis that was already full, so the
-  // slider had no visible effect. Panning whichever axis has overflow (and
-  // centering the other) keeps the slider working for any image shape.
   function drawImageCover(ctx, img, x, y, w, h, panT, zoom){
     var s = Math.max(w/img.width, h/img.height) * (zoom || 1);
     var iw = img.width*s, ih = img.height*s;
@@ -970,7 +915,6 @@
     var W = canvas.width, H = canvas.height;
     ctx.clearRect(0,0,W,H);
 
-    // scene
     ctx.fillStyle = "#0d0f14";
     ctx.fillRect(0,0,W,H);
     if(state.sceneImg){
@@ -1000,13 +944,7 @@
     var gap = W*0.014;
     var hasCard = !!(state.name || state.title);
 
-    // The name/title card always sits directly BELOW the caller photo, in
-    // both top and bottom placements — so for a bottom corner the photo is
-    // lifted up to make room for the card underneath it, rather than the
-    // card sitting above the photo. Card metrics (size) are worked out here,
-    // before the photo's y-position, so the bottom-corner math can reserve
-    // exactly the right amount of space beneath the photo.
-    var cardX = 0, cardW = 0, baseH = 0, radius = 0, showIcon = false, iconW = 0,
+    var cardX = 0, cardW = 0, baseH = 0, radius = 0,
         textX = 0, textW = 0, padX = 0, innerW = 0, nameFont = "", titleFont = "",
         nameLine = "", titleLines = [], nameYOffset = 0, title0YOffset = 0, titleLineStep = 0,
         cardH = 0;
@@ -1017,10 +955,8 @@
       baseH = insetH * 0.46;
       radius = baseH * 0.30;
 
-      showIcon = state.callState !== "none";
-      iconW = showIcon ? baseH : 0;
-      textX = cardX + iconW;
-      textW = cardW - iconW;
+      textX = cardX;
+      textW = cardW;
       padX = textW*0.09;
       innerW = textW - padX*2;
 
@@ -1035,8 +971,6 @@
       ctx.font = titleFont;
       titleLines = wrapText(ctx, state.title || "Title / country", innerW, 2);
 
-      // vertical rhythm, expressed as offsets from the capsule's own top so
-      // it grows cleanly when there's a second title line
       var topPad = baseH*0.34;
       var gapNameToTitle = baseH*0.30;
       titleLineStep = baseH*0.26;
@@ -1048,10 +982,6 @@
       var neededH = lastTitleYOffset + bottomPad;
       cardH = Math.max(baseH, neededH);
 
-      // When the capsule ends up taller than the text actually needs (the
-      // common single-line-title case, where cardH is clamped to baseH),
-      // re-center the whole name+title block in the extra vertical space
-      // instead of leaving it pinned to the top padding.
       var extraV = (cardH - neededH) / 2;
       nameYOffset += extraV;
       title0YOffset += extraV;
@@ -1061,14 +991,10 @@
     if(isTop){
       iy = margin;
     } else {
-      // bottom corner: raise the photo to leave room for the card (+gap)
-      // beneath it, so the whole photo+card group's outer edge still sits
-      // at the same margin from the canvas edge as the top placement does.
       iy = hasCard ? (H - margin - insetH - gap - cardH) : (H - margin - insetH);
     }
     var cardY = hasCard ? (iy + insetH + gap) : 0;
 
-    // drop shadow + rounded frame for the cutout
     ctx.save();
     ctx.shadowColor = "rgba(0,0,0,.45)";
     ctx.shadowBlur = W*0.02;
@@ -1092,13 +1018,7 @@
       ctx.restore();
     }
 
-    // name capsule — the call icon and the name/flag box are one continuous
-    // pill so there's no gap or seam between them, matching the reference.
-    // The title wraps onto a second line (instead of truncating) when it's
-    // long, and the capsule grows downward/upward to fit it.
     if(hasCard){
-      var iconY = cardY + (cardH-baseH)/2;
-
       ctx.save();
       ctx.shadowColor = "rgba(0,0,0,.35)";
       ctx.shadowBlur = W*0.012;
@@ -1112,13 +1032,8 @@
       roundRectPath(ctx, cardX, cardY, cardW, cardH, radius);
       ctx.clip();
 
-      // text / flag portion
       if(state.cardTone === "flag" && state.flagImg){
         drawImageCover(ctx, state.flagImg, textX, cardY, textW, cardH, state.flagPos, state.flagZoom);
-        // Solid black fading to fully transparent — "Gradient reach" controls
-        // how far across the card the solid black extends before it starts
-        // fading; canvas gradients clamp to the last stop, so the region
-        // beyond the fade point stays fully transparent automatically.
         var reachX = textX + textW * state.gradientReach;
         var grad = ctx.createLinearGradient(textX, 0, reachX, 0);
         grad.addColorStop(0, "rgba(0,0,0," + state.gradientOpacity + ")");
@@ -1129,7 +1044,6 @@
         ctx.fillStyle = "rgba(10,12,16,.9)";
         ctx.fillRect(textX,cardY,textW,cardH);
 
-        // emoji flag watermark (used only when no flag photo is uploaded)
         ctx.save();
         ctx.globalAlpha = 0.22;
         ctx.font = (cardH*1.5) + "px 'IBM Plex Sans', sans-serif";
@@ -1138,25 +1052,6 @@
         ctx.translate(textX+textW*1.02, cardY+cardH*0.55);
         ctx.rotate(-0.12);
         ctx.fillText(state.country[2], 0, 0);
-        ctx.restore();
-      }
-
-      // icon portion — drawn last so it always sits crisp against the text
-      // portion with no seam; stays a fixed square, centered in a taller capsule
-      if(showIcon){
-        var iconGrad = ctx.createLinearGradient(cardX, iconY, cardX, iconY+baseH);
-        iconGrad.addColorStop(0, state.callState === "live" ? "#1e6b3d" : "#1f5f38");
-        iconGrad.addColorStop(1, state.callState === "live" ? "#4ee08a" : "#3ddc84");
-        ctx.fillStyle = iconGrad;
-        ctx.fillRect(cardX, cardY, iconW, cardH);
-
-        var phonePath = new Path2D("M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z");
-        var pScale = (iconW*0.46)/24;
-        ctx.save();
-        ctx.translate(cardX + iconW/2 - pScale*12, iconY + baseH/2 - pScale*12);
-        ctx.scale(pScale, pScale);
-        ctx.fillStyle = "#fff";
-        ctx.fill(phonePath);
         ctx.restore();
       }
 
@@ -1192,9 +1087,6 @@
     return t + "…";
   }
 
-  // Greedy word-wrap up to maxLines. If the text needs more lines than that,
-  // the last line is truncated with an ellipsis instead of overflowing.
-  // ctx.font must already be set to the font this text will render in.
   function wrapText(ctx, text, maxWidth, maxLines){
     var words = String(text).split(/\s+/).filter(Boolean);
     if(words.length === 0) return [""];
@@ -1224,7 +1116,6 @@
     els.downloadBtn.disabled = !ready;
   }
 
-  // ---------- download ----------
   var downloadsCap = null;
   var capReady = false;
   if(window.claude && typeof window.claude.use === "function"){
@@ -1236,8 +1127,6 @@
     els.finalCanvas.toBlob(function(blob){
       var filename = "panggilan-" + (state.name ? state.name.toLowerCase().replace(/[^a-z0-9]+/g,"-") : "rasmi") + ".png";
       if(downloadsCap){
-        // Running inside the Claude artifact sandbox — go through its
-        // save-confirmation flow.
         setStatus("Waiting for your confirmation to save…");
         downloadsCap.save({ filename: filename, data: blob }).then(function(){
           setStatus("Saved " + filename);
@@ -1246,13 +1135,8 @@
           else { setStatus("Couldn't save automatically — right-click the preview to save it manually.", false); }
         });
       } else if(window.claude && typeof window.claude.use === "function"){
-        // The claude.use API exists but the downloads capability wasn't
-        // granted — no browser download fallback is reliable inside that
-        // sandbox, so just point the user at the manual option.
         setStatus("Saving isn't available in this view — right-click the preview to save it manually.", false);
       } else {
-        // A normal browser (e.g. this page hosted standalone) — a plain
-        // download link works fine here.
         var url = URL.createObjectURL(blob);
         var a = document.createElement("a");
         a.href = url;
@@ -1267,8 +1151,6 @@
   });
 
   renderFinal();
-  // re-draw once web fonts finish loading so the card text doesn't render
-  // in a fallback face on first paint
   if(document.fonts && document.fonts.ready){
     document.fonts.ready.then(renderFinal).catch(function(){});
   }
