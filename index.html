@@ -165,7 +165,7 @@
   .upload-box .txt b{ display:block; font-weight:600; }
   .upload-box .txt span{ color:var(--ink-soft); font-size:12px; }
 
-  input[type=text], select{
+  input[type=text], select, textarea{
     width:100%;
     font:inherit;
     font-size:14px;
@@ -175,7 +175,12 @@
     background:var(--surface);
     color:var(--ink);
   }
-  input[type=text]:focus, select:focus, button:focus-visible, .swatch:focus-visible{
+  textarea{
+    resize:vertical;
+    min-height:64px;
+    line-height:1.4;
+  }
+  input[type=text]:focus, select:focus, textarea:focus, button:focus-visible, .swatch:focus-visible{
     outline:2px solid var(--accent);
     outline-offset:1px;
   }
@@ -447,7 +452,8 @@
       </div>
       <div>
         <span class="label">Title / role</span>
-        <input type="text" id="titleInput" placeholder="e.g. Perdana Menteri Pakistan">
+        <textarea id="titleInput" rows="2" placeholder="e.g. Perdana Menteri&#10;Pakistan"></textarea>
+        <p class="hint">Press Enter to control exactly where the second line breaks. Left blank, one line wraps automatically.</p>
       </div>
       <div>
         <span class="label">Country</span>
@@ -972,7 +978,7 @@
       nameLine = truncateToWidth(ctx, state.name || "Name", innerW);
 
       ctx.font = titleFont;
-      titleLines = wrapText(ctx, state.title || "Title / country", innerW, 2);
+      titleLines = splitTitleLines(ctx, state.title || "Title / country", innerW, 2);
 
       var topPad = baseH*0.34;
       var gapNameToTitle = baseH*0.30;
@@ -1131,6 +1137,20 @@
     var remainder = lines.slice(maxLines - 1).join(" ");
     shown[maxLines - 1] = truncateToWidth(ctx, remainder, maxWidth);
     return shown;
+  }
+
+  // The title textarea lets the user press Enter to decide exactly where
+  // the second line breaks. If they've done that, respect those manual
+  // breaks (just truncating any line that's still too wide); otherwise fall
+  // back to the normal greedy word-wrap.
+  function splitTitleLines(ctx, text, maxWidth, maxLines){
+    var raw = String(text || "");
+    if(raw.indexOf("\n") !== -1){
+      var manualLines = raw.split(/\r?\n/).filter(function(l){ return l.length > 0; }).slice(0, maxLines);
+      if(manualLines.length === 0) manualLines = [""];
+      return manualLines.map(function(l){ return truncateToWidth(ctx, l, maxWidth); });
+    }
+    return wrapText(ctx, raw, maxWidth, maxLines);
   }
 
   function updateDownloadState(){
