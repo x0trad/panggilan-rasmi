@@ -489,8 +489,8 @@
         <button type="button" data-corner="br">BOTTOM&nbsp;RIGHT</button>
       </div>
       <div class="slider-row">
-        <div class="top"><span class="label" style="margin:0">Inset size</span><output id="scaleOut">100</output></div>
-        <input type="range" id="scaleSlider" min="60" max="150" value="100">
+        <div class="top"><span class="label" style="margin:0">Inset size</span><output id="scaleOut">65</output></div>
+        <input type="range" id="scaleSlider" min="60" max="150" value="65">
       </div>
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
         <input type="checkbox" id="borderToggle" checked style="width:auto;">
@@ -555,7 +555,7 @@
     cutoutW: 0, cutoutH: 0,
     origData: null,
     corner: "tl",
-    insetScale: 1.0,
+    insetScale: 0.65,
     showBorder: true,
     flagZoom: 1,
     flagPos: 0.5,
@@ -944,7 +944,7 @@
     var gap = W*0.014;
     var hasCard = !!(state.name || state.title);
 
-    var cardX = 0, cardW = 0, baseH = 0, radius = 0,
+    var cardX = 0, cardW = 0, baseH = 0, radius = 0, iconW = 0,
         textX = 0, textW = 0, padX = 0, innerW = 0, nameFont = "", titleFont = "",
         nameLine = "", titleLines = [], nameYOffset = 0, title0YOffset = 0, titleLineStep = 0,
         cardH = 0;
@@ -955,8 +955,11 @@
       baseH = insetH * 0.46;
       radius = baseH * 0.30;
 
-      textX = cardX;
-      textW = cardW;
+      // The green call icon is always shown, sized as a fixed square that
+      // matches the capsule's base height.
+      iconW = baseH;
+      textX = cardX + iconW;
+      textW = cardW - iconW;
       padX = textW*0.09;
       innerW = textW - padX*2;
 
@@ -1019,6 +1022,8 @@
     }
 
     if(hasCard){
+      var iconY = cardY + (cardH-baseH)/2;
+
       ctx.save();
       ctx.shadowColor = "rgba(0,0,0,.35)";
       ctx.shadowBlur = W*0.012;
@@ -1054,6 +1059,23 @@
         ctx.fillText(state.country[2], 0, 0);
         ctx.restore();
       }
+
+      // call icon — a fixed green square, drawn last so it always sits
+      // crisp against the text/flag portion with no seam
+      var iconGrad = ctx.createLinearGradient(cardX, iconY, cardX, iconY+baseH);
+      iconGrad.addColorStop(0, "#1f5f38");
+      iconGrad.addColorStop(1, "#3ddc84");
+      ctx.fillStyle = iconGrad;
+      ctx.fillRect(cardX, cardY, iconW, cardH);
+
+      var phonePath = new Path2D("M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z");
+      var pScale = (iconW*0.46)/24;
+      ctx.save();
+      ctx.translate(cardX + iconW/2 - pScale*12, iconY + baseH/2 - pScale*12);
+      ctx.scale(pScale, pScale);
+      ctx.fillStyle = "#fff";
+      ctx.fill(phonePath);
+      ctx.restore();
 
       ctx.restore();
 
