@@ -194,6 +194,43 @@
     cursor:pointer;
   }
 
+  input[type=range]{
+    width:100%;
+    height:20px;
+    margin:0;
+    -webkit-appearance:none;
+    appearance:none;
+    background:transparent;
+    cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-runnable-track{
+    height:4px;
+    border-radius:2px;
+    background:var(--line);
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    appearance:none;
+    width:16px;height:16px;
+    margin-top:-6px;
+    border-radius:50%;
+    background:var(--accent);
+    border:2px solid var(--surface);
+    box-shadow:0 0 0 1px var(--accent);
+  }
+  input[type=range]::-moz-range-track{
+    height:4px;
+    border-radius:2px;
+    background:var(--line);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:14px;height:14px;
+    border-radius:50%;
+    background:var(--accent);
+    border:2px solid var(--surface);
+    box-shadow:0 0 0 1px var(--accent);
+  }
+
   .ghost-btn{
     align-self:flex-start;
     font:inherit;
@@ -353,6 +390,18 @@
       <h2><span class="n">5</span> Gambar si mati <span style="font-weight:400;color:var(--ink-soft)">(pilihan)</span></h2>
       <input type="file" id="photoInput" accept="image/*">
       <p class="hint">Photo is automatically converted to black &amp; white, cropped to 250&times;250px with soft blurred edges.</p>
+
+      <div id="photoControls" hidden>
+        <label class="label" style="margin-top:6px">Zoom</label>
+        <input type="range" id="photoZoomSlider" min="1" max="3" step="0.01" value="1">
+
+        <label class="label" style="margin-top:10px">Position &mdash; left / right</label>
+        <input type="range" id="photoPanXSlider" min="-1" max="1" step="0.01" value="0">
+
+        <label class="label" style="margin-top:10px">Position &mdash; up / down</label>
+        <input type="range" id="photoPanYSlider" min="-1" max="1" step="0.01" value="0">
+      </div>
+
       <button type="button" class="ghost-btn" id="removePhotoBtn" hidden>Remove photo</button>
     </div>
 
@@ -373,7 +422,7 @@
   var els = {};
   ["templateToggle","nameInput","titleInput",
    "dateGroupMuslim","dateGroupNonMuslim","dateGregInput","dateHijriInput","dateSimpleInput",
-   "photoInput","removePhotoBtn",
+   "photoInput","removePhotoBtn","photoControls","photoZoomSlider","photoPanXSlider","photoPanYSlider",
    "downloadBtn","statusLine","finalCanvas"
   ].forEach(function(id){ els[id] = document.getElementById(id); });
 
@@ -384,6 +433,10 @@
     dateGreg: "",
     dateHijri: "",
     dateSimple: "",
+    photoImg: null,
+    photoZoom: 1,
+    photoPanX: 0,
+    photoPanY: 0,
     photoCanvas: null
   };
 
@@ -415,48 +468,12 @@
 
   var PHOTO_SIZE = 250;
 
-  function processPhoto(file){
+  function loadPhotoImage(file){
     return new Promise(function(resolve, reject){
       var reader = new FileReader();
       reader.onload = function(e){
         var img = new Image();
-        img.onload = function(){
-          var size = PHOTO_SIZE;
-          var off = document.createElement("canvas");
-          off.width = size; off.height = size;
-          var octx = off.getContext("2d");
-
-          var srcW = img.naturalWidth || img.width;
-          var srcH = img.naturalHeight || img.height;
-          var scale = Math.max(size / srcW, size / srcH);
-          var dw = srcW * scale, dh = srcH * scale;
-          var dx = (size - dw) / 2, dy = (size - dh) / 2;
-          octx.drawImage(img, dx, dy, dw, dh);
-
-          var imgData = octx.getImageData(0, 0, size, size);
-          var d = imgData.data;
-          for(var i = 0; i < d.length; i += 4){
-            var gray = d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114;
-            d[i] = d[i + 1] = d[i + 2] = gray;
-          }
-          octx.putImageData(imgData, 0, 0);
-
-          var maskCanvas = document.createElement("canvas");
-          maskCanvas.width = size; maskCanvas.height = size;
-          var mctx = maskCanvas.getContext("2d");
-          var grad = mctx.createRadialGradient(size / 2, size / 2, size * 0.24, size / 2, size / 2, size * 0.5);
-          grad.addColorStop(0, "rgba(255,255,255,1)");
-          grad.addColorStop(0.55, "rgba(255,255,255,1)");
-          grad.addColorStop(1, "rgba(255,255,255,0)");
-          mctx.fillStyle = grad;
-          mctx.fillRect(0, 0, size, size);
-
-          octx.globalCompositeOperation = "destination-in";
-          octx.drawImage(maskCanvas, 0, 0);
-          octx.globalCompositeOperation = "source-over";
-
-          resolve(off);
-        };
+        img.onload = function(){ resolve(img); };
         img.onerror = function(){ reject(new Error("Could not load image")); };
         img.src = e.target.result;
       };
@@ -465,23 +482,95 @@
     });
   }
 
+  function updatePhotoCanvas(){
+    var img = state.photoImg;
+    if(!img) return;
+    var size = PHOTO_SIZE;
+    var off = document.createElement("canvas");
+    off.width = size; off.height = size;
+    var octx = off.getContext("2d");
+
+    var srcW = img.naturalWidth || img.width;
+    var srcH = img.naturalHeight || img.height;
+    var baseScale = Math.max(size / srcW, size / srcH);
+    var scale = baseScale * state.photoZoom;
+    var dw = srcW * scale, dh = srcH * scale;
+    var dx0 = (size - dw) / 2, dy0 = (size - dh) / 2;
+    var maxPanX = Math.max(0, (dw - size) / 2);
+    var maxPanY = Math.max(0, (dh - size) / 2);
+    var dx = dx0 + state.photoPanX * maxPanX;
+    var dy = dy0 + state.photoPanY * maxPanY;
+    octx.drawImage(img, dx, dy, dw, dh);
+
+    var imgData = octx.getImageData(0, 0, size, size);
+    var d = imgData.data;
+    for(var i = 0; i < d.length; i += 4){
+      var gray = d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114;
+      d[i] = d[i + 1] = d[i + 2] = gray;
+    }
+    octx.putImageData(imgData, 0, 0);
+
+    var maskCanvas = document.createElement("canvas");
+    maskCanvas.width = size; maskCanvas.height = size;
+    var mctx = maskCanvas.getContext("2d");
+    var grad = mctx.createRadialGradient(size / 2, size / 2, size * 0.24, size / 2, size / 2, size * 0.5);
+    grad.addColorStop(0, "rgba(255,255,255,1)");
+    grad.addColorStop(0.55, "rgba(255,255,255,1)");
+    grad.addColorStop(1, "rgba(255,255,255,0)");
+    mctx.fillStyle = grad;
+    mctx.fillRect(0, 0, size, size);
+
+    octx.globalCompositeOperation = "destination-in";
+    octx.drawImage(maskCanvas, 0, 0);
+    octx.globalCompositeOperation = "source-over";
+
+    state.photoCanvas = off;
+  }
+
   els.photoInput.addEventListener("change", function(){
     var file = els.photoInput.files && els.photoInput.files[0];
     if(!file) return;
     setStatus("Processing photo…");
-    processPhoto(file).then(function(canvas){
-      state.photoCanvas = canvas;
+    loadPhotoImage(file).then(function(img){
+      state.photoImg = img;
+      state.photoZoom = 1;
+      state.photoPanX = 0;
+      state.photoPanY = 0;
+      els.photoZoomSlider.value = "1";
+      els.photoPanXSlider.value = "0";
+      els.photoPanYSlider.value = "0";
+      updatePhotoCanvas();
+      els.photoControls.hidden = false;
       els.removePhotoBtn.hidden = false;
-      setStatus("Photo added.");
+      setStatus("Photo added. Use the sliders to zoom and reposition.");
       renderFinal();
     }).catch(function(){
       setStatus("Couldn't process that image — try a different file.", false);
     });
   });
 
+  function bindPhotoSlider(el, key){
+    el.addEventListener("input", function(){
+      state[key] = parseFloat(el.value);
+      updatePhotoCanvas();
+      renderFinal();
+    });
+  }
+  bindPhotoSlider(els.photoZoomSlider, "photoZoom");
+  bindPhotoSlider(els.photoPanXSlider, "photoPanX");
+  bindPhotoSlider(els.photoPanYSlider, "photoPanY");
+
   els.removePhotoBtn.addEventListener("click", function(){
+    state.photoImg = null;
     state.photoCanvas = null;
+    state.photoZoom = 1;
+    state.photoPanX = 0;
+    state.photoPanY = 0;
     els.photoInput.value = "";
+    els.photoZoomSlider.value = "1";
+    els.photoPanXSlider.value = "0";
+    els.photoPanYSlider.value = "0";
+    els.photoControls.hidden = true;
     els.removePhotoBtn.hidden = true;
     setStatus("Photo removed.");
     renderFinal();
