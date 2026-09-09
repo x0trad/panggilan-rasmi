@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Takziah</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&family=Amiri:wght@400;700&display=swap');
+
+  :root{
+    --bg:#f4f2ec;
+    --surface:#ffffff;
+    --surface-2:#eae6da;
+    --ink:#1c2333;
+    --ink-soft:#5a6178;
+    --accent:#a8792f;
+    --accent-ink:#6b4e1f;
+    --accent-soft:#f1e4c8;
+    --line:#ddd6c4;
+    --danger:#a13f3f;
+    --good:#2f8f5b;
+    --shadow: 0 1px 2px rgba(28,35,51,.06), 0 8px 24px -12px rgba(28,35,51,.18);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12141c;
+      --surface:#191c28;
+      --surface-2:#20232f;
+      --ink:#eef0f5;
+      --ink-soft:#9aa0b6;
+      --accent:#d3a54c;
+      --accent-ink:#f0cf8a;
+      --accent-soft:#332b18;
+      --line:#2c3040;
+      --danger:#e08585;
+      --good:#4fd08a;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 30px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12141c;
+    --surface:#191c28;
+    --surface-2:#20232f;
+    --ink:#eef0f5;
+    --ink-soft:#9aa0b6;
+    --accent:#d3a54c;
+    --accent-ink:#f0cf8a;
+    --accent-soft:#332b18;
+    --line:#2c3040;
+    --danger:#e08585;
+    --good:#4fd08a;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 30px -14px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box;}
+  [hidden]{display:none!important;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--accent-soft); }
+
+  .label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    display:block;
+    margin-bottom:6px;
+  }
+
+  header.app-head{
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    padding:22px clamp(16px,4vw,40px) 18px;
+    border-bottom:1px solid var(--line);
+  }
+  header.app-head .crest{
+    width:34px;height:34px;border-radius:50%;
+    background:linear-gradient(155deg,var(--accent),var(--accent-ink));
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-family:'Source Serif 4',serif;font-weight:700;font-size:16px;
+    flex:none;
+    box-shadow:var(--shadow);
+  }
+  header.app-head h1{
+    font-family:'Source Serif 4', serif;
+    font-weight:600;
+    font-size:22px;
+    margin:0;
+    letter-spacing:.005em;
+  }
+  header.app-head .tagline{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin:0;
+  }
+  header.app-head .nav-link{
+    margin-left:auto;
+    font-size:12.5px;
+    font-weight:500;
+    color:var(--ink-soft);
+    text-decoration:none;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:7px 12px;
+    white-space:nowrap;
+  }
+  header.app-head .nav-link:hover{ color:var(--ink); border-color:var(--accent); }
+
+  .shell{
+    display:flex;
+    flex-direction:column;
+    min-height:calc(100vh - 78px);
+  }
+
+  .rail{
+    border-top:1px solid var(--line);
+    padding:22px 20px 60px;
+    display:flex;
+    flex-direction:column;
+    gap:26px;
+    max-width:640px;
+    margin:0 auto;
+    width:100%;
+  }
+
+  .field-group{ display:flex; flex-direction:column; gap:14px; }
+  .field-group h2{
+    font-family:'Source Serif 4', serif;
+    font-size:15px;
+    font-weight:600;
+    margin:0 0 2px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .field-group h2 .n{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--accent-ink);
+    background:var(--accent-soft);
+    border-radius:5px;
+    padding:1px 6px;
+  }
+
+  input[type=text], select, textarea{
+    width:100%;
+    font:inherit;
+    font-size:14px;
+    padding:10px 12px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--ink);
+  }
+  textarea{
+    resize:vertical;
+    min-height:64px;
+    line-height:1.4;
+  }
+  input[type=text]:focus, select:focus, textarea:focus, button:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:1px;
+  }
+
+  .hint{ font-size:11.5px; color:var(--ink-soft); line-height:1.5; }
+
+  .toolbtns{ display:flex; gap:8px; }
+  .toolbtns button{
+    flex:1;
+    padding:10px 8px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--ink);
+    font:inherit;
+    font-size:13px;
+    font-weight:500;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+  }
+  .toolbtns button.active{ background:var(--ink); color:var(--bg); border-color:var(--ink); }
+
+  button.primary{
+    font:inherit;
+    font-weight:600;
+    font-size:14px;
+    padding:12px 16px;
+    border-radius:9px;
+    border:none;
+    background:var(--ink);
+    color:var(--bg);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+  }
+  button.primary:disabled{ opacity:.45; cursor:not-allowed; }
+
+  .stage{
+    padding:clamp(20px,4vw,48px);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:18px;
+  }
+  .stage-toolbar{
+    width:100%;
+    max-width:520px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+
+  .canvas-mat{
+    background:var(--surface);
+    border-radius:18px;
+    box-shadow:var(--shadow);
+    padding:14px;
+    border:1px solid var(--line);
+  }
+  #finalCanvas{
+    display:block;
+    width:auto;
+    height:auto;
+    max-width:min(70vw, 420px);
+    max-height:min(70vh, 640px);
+    border-radius:9px;
+    background:#000;
+  }
+
+  .status{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    display:flex;
+    gap:6px;
+    align-items:center;
+  }
+  .status .dot{ width:6px;height:6px;border-radius:50%; background:var(--good); }
+
+  footer.credit{
+    text-align:center;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    padding:10px 0 30px;
+  }
+</style>
+</head>
+<body>
+
+<header class="app-head">
+  <div class="crest">TZ</div>
+  <div>
+    <h1>Takziah</h1>
+    <p class="tagline">Condolence notice composer &mdash; visual design desk</p>
+  </div>
+  <a class="nav-link" href="index.html">&larr; Panggilan Rasmi</a>
+</header>
+
+<div class="shell">
+  <main class="stage">
+    <div class="stage-toolbar">
+      <span class="label" style="margin:0">Live preview</span>
+    </div>
+    <div class="canvas-mat">
+      <canvas id="finalCanvas" width="1012" height="1350"></canvas>
+    </div>
+  </main>
+
+  <aside class="rail">
+
+    <div class="field-group">
+      <h2><span class="n">1</span> Template</h2>
+      <div class="toolbtns" id="templateToggle">
+        <button type="button" data-tpl="muslim" class="active">Islam</button>
+        <button type="button" data-tpl="nonmuslim">Bukan Islam</button>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <h2><span class="n">2</span> Nama si mati</h2>
+      <textarea id="nameInput" rows="2" placeholder="e.g. Abdul Wahab&#10;Alwi"></textarea>
+      <p class="hint">Press Enter to control exactly where the second line breaks. Left blank, one line wraps automatically.</p>
+    </div>
+
+    <div class="field-group">
+      <h2><span class="n">3</span> Gelaran / keterangan</h2>
+      <textarea id="titleInput" rows="2" placeholder="e.g. &quot;Bapa MRSM&quot;&#10;Pengasas Maktab Rendah Sains MARA (MRSM)"></textarea>
+      <p class="hint">Press Enter to control exactly where the second line breaks. Left blank, one line wraps automatically.</p>
+    </div>
+
+    <div class="field-group" id="dateGroupMuslim">
+      <h2><span class="n">4</span> Tarikh kembali ke Rahmatullah</h2>
+      <input type="text" id="dateGregInput" placeholder="e.g. 25 Ogos 2026">
+      <label class="label" style="margin:6px 0 0">Tarikh Hijrah</label>
+      <input type="text" id="dateHijriInput" placeholder="e.g. 12 Rabiulawal 1448H">
+      <p class="hint">Rendered as &ldquo;Telah kembali ke Rahmatullah pada&rdquo; followed by the Gregorian date, &ldquo;bersamaan&rdquo;, and the Hijri date.</p>
+    </div>
+
+    <div class="field-group" id="dateGroupNonMuslim" hidden>
+      <h2><span class="n">4</span> Tarikh meninggal dunia</h2>
+      <input type="text" id="dateSimpleInput" placeholder="e.g. 23 Jun 2026">
+      <p class="hint">Rendered as &ldquo;Meninggal dunia pada&rdquo; followed by the date.</p>
+    </div>
+
+    <div class="field-group">
+      <button class="primary" id="downloadBtn">&#8681; Save takziah graphic</button>
+      <div class="status" id="statusLine"><span class="dot"></span><span>Fill in the details to compose the notice.</span></div>
+    </div>
+  </aside>
+</div>
+<footer class="credit">Internal tool &middot; PMO Visual Design Desk</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var ARABIC_TAKZIAH = "إِنَّا لِلّهِ وَإِنَّا إِلَيْهِ رَاجِعُونَ";
+
+  var els = {};
+  ["templateToggle","nameInput","titleInput",
+   "dateGroupMuslim","dateGroupNonMuslim","dateGregInput","dateHijriInput","dateSimpleInput",
+   "downloadBtn","statusLine","finalCanvas"
+  ].forEach(function(id){ els[id] = document.getElementById(id); });
+
+  var state = {
+    template: "muslim",
+    name: "",
+    title: "",
+    dateGreg: "",
+    dateHijri: "",
+    dateSimple: ""
+  };
+
+  function setStatus(msg, ok){
+    els.statusLine.innerHTML = '<span class="dot" style="background:' + (ok===false ? "var(--danger)" : "var(--good)") + '"></span><span></span>';
+    els.statusLine.querySelector("span:last-child").textContent = msg;
+  }
+
+  els.templateToggle.addEventListener("click", function(e){
+    var btn = e.target.closest("button[data-tpl]");
+    if(!btn) return;
+    state.template = btn.getAttribute("data-tpl");
+    Array.prototype.forEach.call(els.templateToggle.querySelectorAll("button"), function(b){
+      b.classList.toggle("active", b === btn);
+    });
+    els.dateGroupMuslim.hidden = state.template !== "muslim";
+    els.dateGroupNonMuslim.hidden = state.template === "muslim";
+    renderFinal();
+  });
+
+  function bindText(el, key){
+    el.addEventListener("input", function(){ state[key] = el.value; renderFinal(); });
+  }
+  bindText(els.nameInput, "name");
+  bindText(els.titleInput, "title");
+  bindText(els.dateGregInput, "dateGreg");
+  bindText(els.dateHijriInput, "dateHijri");
+  bindText(els.dateSimpleInput, "dateSimple");
+
+  function truncateToWidth(ctx, text, maxWidth){
+    if(ctx.measureText(text).width <= maxWidth) return text;
+    var lo = 0, hi = text.length;
+    while(lo < hi){
+      var mid = (lo + hi + 1) >> 1;
+      var candidate = text.slice(0, mid).trim() + "…";
+      if(ctx.measureText(candidate).width <= maxWidth) lo = mid; else hi = mid - 1;
+    }
+    return text.slice(0, lo).trim() + "…";
+  }
+
+  function wrapText(ctx, text, maxWidth, maxLines){
+    var words = String(text || "").split(/\s+/).filter(Boolean);
+    if(words.length === 0) return [""];
+    var lines = [];
+    var current = "";
+    for(var i = 0; i < words.length; i++){
+      var attempt = current ? current + " " + words[i] : words[i];
+      if(ctx.measureText(attempt).width <= maxWidth){
+        current = attempt;
+      } else {
+        if(current) lines.push(current);
+        current = words[i];
+        if(lines.length === maxLines - 1){
+          var rest = [current].concat(words.slice(i + 1)).join(" ");
+          lines.push(truncateToWidth(ctx, rest, maxWidth));
+          return lines;
+        }
+      }
+    }
+    if(current) lines.push(current);
+    return lines.length ? lines : [""];
+  }
+
+  function splitLines(ctx, text, maxWidth, maxLines){
+    var raw = String(text || "");
+    if(raw.indexOf("\n") !== -1){
+      var manualLines = raw.split(/\r?\n/).filter(function(l){ return l.length > 0; }).slice(0, maxLines);
+      if(manualLines.length === 0) manualLines = [""];
+      return manualLines.map(function(l){ return truncateToWidth(ctx, l, maxWidth); });
+    }
+    return wrapText(ctx, raw, maxWidth, maxLines);
+  }
+
+  function renderFinal(){
+    var canvas = els.finalCanvas;
+    var ctx = canvas.getContext("2d");
+    var W = canvas.width, H = canvas.height;
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(0, 0, W, H);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = "#ffffff";
+
+    var marginX = W * 0.0583;
+    var frameTopY = H * 0.11407;
+    var frameBottomY = H * 0.94222;
+    var cx = W / 2;
+    var maxTextW = (W - marginX * 2) * 0.86;
+
+    ctx.strokeStyle = "rgba(255,255,255,.92)";
+    ctx.lineWidth = Math.max(1, W * 0.0016);
+    ctx.strokeRect(marginX, frameTopY, W - marginX * 2, frameBottomY - frameTopY);
+
+    if(state.template === "muslim"){
+      ctx.font = "700 " + (W * 0.062) + "px 'Amiri', serif";
+      ctx.fillText(ARABIC_TAKZIAH, cx, H * 0.098);
+    } else {
+      ctx.font = "700 " + (W * 0.064) + "px 'IBM Plex Sans', sans-serif";
+      ctx.fillText("TAKZIAH", cx, H * 0.1);
+    }
+
+    if(state.template === "muslim"){
+      ctx.font = "700 " + (W * 0.038) + "px 'IBM Plex Sans', sans-serif";
+      ctx.fillText("TAKZIAH", cx, H * 0.196);
+      ctx.font = "400 " + (W * 0.0215) + "px 'IBM Plex Sans', sans-serif";
+      ctx.fillText("Kepada seluruh ahli keluarga", cx, H * 0.222);
+    } else {
+      ctx.font = "600 " + (W * 0.0245) + "px 'IBM Plex Sans', sans-serif";
+      ctx.fillText("BUAT SELURUH KELUARGA", cx, H * 0.1455);
+      ctx.fillText("DI ATAS PEMERGIAN MENDIANG", cx, H * 0.1685);
+    }
+
+    var divider1Y = H * 0.55926;
+    var divider2Y = H * 0.72963;
+    ctx.strokeStyle = "rgba(255,255,255,.35)";
+    ctx.lineWidth = Math.max(1, W * 0.001);
+    ctx.beginPath();
+    ctx.moveTo(marginX + W * 0.02, divider1Y);
+    ctx.lineTo(W - marginX - W * 0.02, divider1Y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(marginX + W * 0.02, divider2Y);
+    ctx.lineTo(W - marginX - W * 0.02, divider2Y);
+    ctx.stroke();
+
+    ctx.fillStyle = "#ffffff";
+    var nameFontPx = W * 0.0395;
+    var titleFontPx = W * 0.0255;
+    var nameLineStep = H * 0.0326;
+    var titleLineStep = H * 0.0237;
+
+    ctx.font = "700 " + nameFontPx + "px 'IBM Plex Sans', sans-serif";
+    var nameLines = splitLines(ctx, state.name || "Nama si mati", maxTextW, 2);
+
+    ctx.font = "700 " + titleFontPx + "px 'IBM Plex Sans', sans-serif";
+    var titleLines = splitLines(ctx, state.title || "Gelaran / keterangan", maxTextW, 2);
+
+    var dateLines = [];
+    if(state.template === "muslim"){
+      dateLines.push({ text: "Telah kembali ke Rahmatullah pada", weight: 400, size: W * 0.0215 });
+      var combo = (state.dateGreg || "—") + " bersamaan " + (state.dateHijri || "—");
+      dateLines.push({ text: combo, weight: 700, size: W * 0.0245 });
+    } else {
+      dateLines.push({ text: "Meninggal dunia pada " + (state.dateSimple || "—"), weight: 700, size: W * 0.0245 });
+    }
+
+    var topPad = H * 0.028;
+    var gapNameToTitle = H * 0.024;
+    var gapTitleToDate = H * 0.03;
+    var dateLineStep = H * 0.026;
+    var bottomPad = H * 0.024;
+
+    var y = topPad;
+    var nameYOffset = y;
+    y += (nameLines.length - 1) * nameLineStep;
+    y += gapNameToTitle;
+    var titleYOffset = y;
+    y += (titleLines.length - 1) * titleLineStep;
+    y += gapTitleToDate;
+    var dateYOffsets = [];
+    for(var di = 0; di < dateLines.length; di++){
+      dateYOffsets.push(y);
+      y += dateLineStep;
+    }
+    var neededH = y - dateLineStep + bottomPad;
+    var bandH = divider2Y - divider1Y;
+    var extraV = Math.max(0, (bandH - neededH) / 2);
+
+    ctx.font = "700 " + nameFontPx + "px 'IBM Plex Sans', sans-serif";
+    nameLines.forEach(function(line, i){
+      ctx.fillText(line, cx, divider1Y + nameYOffset + extraV + i * nameLineStep);
+    });
+
+    ctx.font = "700 " + titleFontPx + "px 'IBM Plex Sans', sans-serif";
+    titleLines.forEach(function(line, i){
+      ctx.fillText(line, cx, divider1Y + titleYOffset + extraV + i * titleLineStep);
+    });
+
+    dateLines.forEach(function(d, i){
+      ctx.font = d.weight + " " + d.size + "px 'IBM Plex Sans', sans-serif";
+      ctx.fillText(d.text, cx, divider1Y + dateYOffsets[i] + extraV);
+    });
+
+    ctx.font = "500 " + (W * 0.0178) + "px 'IBM Plex Mono', monospace";
+    ctx.fillText("DARIPADA:", cx, H * 0.8111);
+    ctx.font = "700 " + (W * 0.0316) + "px 'IBM Plex Sans', sans-serif";
+    ctx.fillText("ANWAR IBRAHIM", cx, H * 0.8452);
+    ctx.font = "400 " + (W * 0.0198) + "px 'IBM Plex Sans', sans-serif";
+    ctx.fillText("PERDANA MENTERI", cx, H * 0.8704);
+  }
+
+  var downloadsCap = null;
+  var capReady = false;
+  if(window.claude && typeof window.claude.use === "function"){
+    window.claude.use("downloads").then(function(ns){ downloadsCap = ns; capReady = true; })
+      .catch(function(){ capReady = true; });
+  } else { capReady = true; }
+
+  els.downloadBtn.addEventListener("click", function(){
+    els.finalCanvas.toBlob(function(blob){
+      var filename = "takziah-" + (state.name ? state.name.toLowerCase().replace(/[^a-z0-9]+/g,"-") : "notice") + ".png";
+      if(downloadsCap){
+        setStatus("Waiting for your confirmation to save…");
+        downloadsCap.save({ filename: filename, data: blob }).then(function(){
+          setStatus("Saved " + filename);
+        }).catch(function(err){
+          if(err && err.code === "declined"){ setStatus("Save cancelled."); }
+          else { setStatus("Couldn't save automatically — right-click the preview to save it manually.", false); }
+        });
+      } else if(window.claude && typeof window.claude.use === "function"){
+        setStatus("Saving isn't available in this view — right-click the preview to save it manually.", false);
+      } else {
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+        setStatus("Saved " + filename);
+      }
+    }, "image/png");
+  });
+
+  renderFinal();
+  if(document.fonts && document.fonts.ready){
+    document.fonts.ready.then(renderFinal).catch(function(){});
+  }
+})();
+</script>
+
+</body>
+</html>
