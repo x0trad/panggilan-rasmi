@@ -412,6 +412,25 @@
     return wrapText(ctx, raw, maxWidth, maxLines);
   }
 
+  var BG_IMAGES = {
+    muslim: null,
+    nonmuslim: null
+  };
+  var BG_READY = { muslim: false, nonmuslim: false };
+  function loadBg(key, src){
+    var img = new Image();
+    img.onload = function(){ BG_READY[key] = true; renderFinal(); };
+    img.src = src;
+    BG_IMAGES[key] = img;
+  }
+  loadBg("muslim", "takziah-muslim-bg.png");
+  loadBg("nonmuslim", "takziah-nonmuslim-bg.png");
+
+  var DIVIDERS = {
+    muslim:    { d1: 757 / 1350, d2: 986 / 1350 },
+    nonmuslim: { d1: 780 / 1350, d2: 979 / 1350 }
+  };
+
   function renderFinal(){
     var canvas = els.finalCanvas;
     var ctx = canvas.getContext("2d");
@@ -420,51 +439,23 @@
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = "#000000";
     ctx.fillRect(0, 0, W, H);
+
+    var bgImg = BG_IMAGES[state.template];
+    if(BG_READY[state.template] && bgImg){
+      ctx.drawImage(bgImg, 0, 0, W, H);
+    }
+
     ctx.textAlign = "center";
     ctx.textBaseline = "alphabetic";
     ctx.fillStyle = "#ffffff";
 
     var marginX = W * 0.0583;
-    var frameTopY = H * 0.11407;
-    var frameBottomY = H * 0.94222;
     var cx = W / 2;
     var maxTextW = (W - marginX * 2) * 0.86;
 
-    ctx.strokeStyle = "rgba(255,255,255,.92)";
-    ctx.lineWidth = Math.max(1, W * 0.0016);
-    ctx.strokeRect(marginX, frameTopY, W - marginX * 2, frameBottomY - frameTopY);
-
-    if(state.template === "muslim"){
-      ctx.font = "700 " + (W * 0.062) + "px 'Amiri', serif";
-      ctx.fillText(ARABIC_TAKZIAH, cx, H * 0.098);
-    } else {
-      ctx.font = "700 " + (W * 0.064) + "px 'IBM Plex Sans', sans-serif";
-      ctx.fillText("TAKZIAH", cx, H * 0.1);
-    }
-
-    if(state.template === "muslim"){
-      ctx.font = "700 " + (W * 0.038) + "px 'IBM Plex Sans', sans-serif";
-      ctx.fillText("TAKZIAH", cx, H * 0.196);
-      ctx.font = "400 " + (W * 0.0215) + "px 'IBM Plex Sans', sans-serif";
-      ctx.fillText("Kepada seluruh ahli keluarga", cx, H * 0.222);
-    } else {
-      ctx.font = "600 " + (W * 0.0245) + "px 'IBM Plex Sans', sans-serif";
-      ctx.fillText("BUAT SELURUH KELUARGA", cx, H * 0.1455);
-      ctx.fillText("DI ATAS PEMERGIAN MENDIANG", cx, H * 0.1685);
-    }
-
-    var divider1Y = H * 0.55926;
-    var divider2Y = H * 0.72963;
-    ctx.strokeStyle = "rgba(255,255,255,.35)";
-    ctx.lineWidth = Math.max(1, W * 0.001);
-    ctx.beginPath();
-    ctx.moveTo(marginX + W * 0.02, divider1Y);
-    ctx.lineTo(W - marginX - W * 0.02, divider1Y);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(marginX + W * 0.02, divider2Y);
-    ctx.lineTo(W - marginX - W * 0.02, divider2Y);
-    ctx.stroke();
+    var divCfg = DIVIDERS[state.template];
+    var divider1Y = H * divCfg.d1;
+    var divider2Y = H * divCfg.d2;
 
     ctx.fillStyle = "#ffffff";
     var nameFontPx = W * 0.0395;
@@ -523,13 +514,6 @@
       ctx.font = d.weight + " " + d.size + "px 'IBM Plex Sans', sans-serif";
       ctx.fillText(d.text, cx, divider1Y + dateYOffsets[i] + extraV);
     });
-
-    ctx.font = "500 " + (W * 0.0178) + "px 'IBM Plex Mono', monospace";
-    ctx.fillText("DARIPADA:", cx, H * 0.8111);
-    ctx.font = "700 " + (W * 0.0316) + "px 'IBM Plex Sans', sans-serif";
-    ctx.fillText("ANWAR IBRAHIM", cx, H * 0.8452);
-    ctx.font = "400 " + (W * 0.0198) + "px 'IBM Plex Sans', sans-serif";
-    ctx.fillText("PERDANA MENTERI", cx, H * 0.8704);
   }
 
   var downloadsCap = null;
