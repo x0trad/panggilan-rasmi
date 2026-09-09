@@ -448,7 +448,8 @@
       <h2><span class="n">3</span> Caller card</h2>
       <div>
         <span class="label">Name</span>
-        <input type="text" id="nameInput" placeholder="e.g. Shehbaz Sharif">
+        <textarea id="nameInput" rows="2" placeholder="e.g. Shehbaz&#10;Sharif"></textarea>
+        <p class="hint">Press Enter to control exactly where the second line breaks. Left blank, one line wraps automatically.</p>
       </div>
       <div>
         <span class="label">Title / role</span>
@@ -899,19 +900,17 @@
     ctx.closePath();
   }
 
+  // "cover" fit, panned left/right only (0 = image's left edge shown,
+  // 0.5 = centered, 1 = image's right edge shown). Vertical stays centered.
+  // Zoom (up to 3x) guarantees there's always horizontal slack to pan
+  // through, regardless of the uploaded photo's aspect ratio.
   function drawImageCover(ctx, img, x, y, w, h, panT, zoom){
     var s = Math.max(w/img.width, h/img.height) * (zoom || 1);
     var iw = img.width*s, ih = img.height*s;
     var t = panT === undefined ? 0.5 : panT;
-    var slackX = iw - w, slackY = ih - h;
-    var dx, dy;
-    if(slackX >= slackY){
-      dx = x - slackX*t;
-      dy = y + (h-ih)/2;
-    } else {
-      dx = x + (w-iw)/2;
-      dy = y - slackY*t;
-    }
+    var slackX = iw - w;
+    var dx = x - slackX*t;
+    var dy = y + (h-ih)/2;
     ctx.drawImage(img, dx, dy, iw, ih);
   }
 
@@ -952,7 +951,8 @@
 
     var cardX = 0, cardW = 0, baseH = 0, radius = 0, iconW = 0,
         textX = 0, textW = 0, padX = 0, innerW = 0, nameFont = "", titleFont = "",
-        nameLine = "", titleLines = [], nameYOffset = 0, title0YOffset = 0, titleLineStep = 0,
+        nameLines = [], titleLines = [], nameYOffset = 0, nameLineStep = 0,
+        title0YOffset = 0, titleLineStep = 0,
         cardH = 0;
     if(hasCard){
       cardX = ix;
@@ -975,18 +975,20 @@
       titleFont = "600 " + titleFontPx + "px 'Helvetica Neue', Helvetica, Arial, 'Inter', sans-serif";
 
       ctx.font = nameFont;
-      nameLine = truncateToWidth(ctx, state.name || "Name", innerW);
+      nameLines = splitTitleLines(ctx, state.name || "Name", innerW, 2);
 
       ctx.font = titleFont;
       titleLines = splitTitleLines(ctx, state.title || "Title / country", innerW, 2);
 
       var topPad = baseH*0.34;
+      nameLineStep = baseH*0.32;
       var gapNameToTitle = baseH*0.30;
       titleLineStep = baseH*0.26;
       var bottomPad = baseH*0.20;
 
       nameYOffset = topPad;
-      title0YOffset = nameYOffset + gapNameToTitle;
+      var lastNameYOffset = nameYOffset + (nameLines.length-1)*nameLineStep;
+      title0YOffset = lastNameYOffset + gapNameToTitle;
       var lastTitleYOffset = title0YOffset + (titleLines.length-1)*titleLineStep;
       var neededH = lastTitleYOffset + bottomPad;
       cardH = Math.max(baseH, neededH);
@@ -1096,7 +1098,9 @@
       ctx.textBaseline = "alphabetic";
       ctx.fillStyle = "#fff";
       ctx.font = nameFont;
-      ctx.fillText(nameLine, textX+padX, cardY+nameYOffset);
+      nameLines.forEach(function(line, i){
+        ctx.fillText(line, textX+padX, cardY+nameYOffset+i*nameLineStep);
+      });
 
       ctx.fillStyle = "rgba(255,255,255,.72)";
       ctx.font = titleFont;
