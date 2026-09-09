@@ -327,6 +327,30 @@
     color:var(--ink-soft);
     padding:10px 0 30px;
   }
+
+  @media (min-width:900px){
+    .shell{
+      flex-direction:row;
+      align-items:flex-start;
+    }
+    .stage{
+      flex:1;
+      position:sticky;
+      top:0;
+      align-self:flex-start;
+      min-height:calc(100vh - 78px);
+      justify-content:center;
+    }
+    .rail{
+      flex:0 0 380px;
+      border-top:none;
+      border-left:1px solid var(--line);
+      max-width:none;
+      margin:0;
+      max-height:calc(100vh - 78px);
+      overflow-y:auto;
+    }
+  }
 </style>
 </head>
 <body>
@@ -353,43 +377,9 @@
   <aside class="rail">
 
     <div class="field-group">
-      <h2><span class="n">1</span> Template</h2>
-      <div class="toolbtns" id="templateToggle">
-        <button type="button" data-tpl="muslim" class="active">Islam</button>
-        <button type="button" data-tpl="nonmuslim">Bukan Islam</button>
-      </div>
-    </div>
-
-    <div class="field-group">
-      <h2><span class="n">2</span> Nama si mati</h2>
-      <textarea id="nameInput" rows="2" placeholder="e.g. Abdul Wahab&#10;Alwi"></textarea>
-      <p class="hint">Press Enter to control exactly where the second line breaks. Left blank, one line wraps automatically.</p>
-    </div>
-
-    <div class="field-group">
-      <h2><span class="n">3</span> Gelaran / keterangan</h2>
-      <textarea id="titleInput" rows="2" placeholder="e.g. &quot;Bapa MRSM&quot;&#10;Pengasas Maktab Rendah Sains MARA (MRSM)"></textarea>
-      <p class="hint">Press Enter to control exactly where the second line breaks. Left blank, one line wraps automatically.</p>
-    </div>
-
-    <div class="field-group" id="dateGroupMuslim">
-      <h2><span class="n">4</span> Tarikh kembali ke Rahmatullah</h2>
-      <input type="text" id="dateGregInput" placeholder="e.g. 25 Ogos 2026">
-      <label class="label" style="margin:6px 0 0">Tarikh Hijrah</label>
-      <input type="text" id="dateHijriInput" placeholder="e.g. 12 Rabiulawal 1448H">
-      <p class="hint">Rendered as &ldquo;Telah kembali ke Rahmatullah pada&rdquo; followed by the Gregorian date, &ldquo;bersamaan&rdquo;, and the Hijri date.</p>
-    </div>
-
-    <div class="field-group" id="dateGroupNonMuslim" hidden>
-      <h2><span class="n">4</span> Tarikh meninggal dunia</h2>
-      <input type="text" id="dateSimpleInput" placeholder="e.g. 23 Jun 2026">
-      <p class="hint">Rendered as &ldquo;Meninggal dunia pada&rdquo; followed by the date.</p>
-    </div>
-
-    <div class="field-group">
-      <h2><span class="n">5</span> Gambar si mati <span style="font-weight:400;color:var(--ink-soft)">(pilihan)</span></h2>
+      <h2><span class="n">1</span> Gambar si mati <span style="font-weight:400;color:var(--ink-soft)">(pilihan)</span></h2>
       <input type="file" id="photoInput" accept="image/*">
-      <p class="hint">Photo is automatically converted to black &amp; white, cropped to 250&times;250px with soft blurred edges.</p>
+      <p class="hint">Photo is automatically converted to black &amp; white, cropped to 250&times;250px with soft blurred edges. On a wider screen the preview stays pinned beside these controls as you adjust it.</p>
 
       <div id="photoControls" hidden>
         <label class="label" style="margin-top:6px">Zoom</label>
@@ -403,6 +393,40 @@
       </div>
 
       <button type="button" class="ghost-btn" id="removePhotoBtn" hidden>Remove photo</button>
+    </div>
+
+    <div class="field-group">
+      <h2><span class="n">2</span> Template</h2>
+      <div class="toolbtns" id="templateToggle">
+        <button type="button" data-tpl="muslim" class="active">Islam</button>
+        <button type="button" data-tpl="nonmuslim">Bukan Islam</button>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <h2><span class="n">3</span> Nama si mati</h2>
+      <textarea id="nameInput" rows="2" placeholder="e.g. Abdul Wahab&#10;Alwi"></textarea>
+      <p class="hint">Press Enter to control exactly where the second line breaks. Left blank, one line wraps automatically.</p>
+    </div>
+
+    <div class="field-group">
+      <h2><span class="n">4</span> Gelaran / keterangan</h2>
+      <textarea id="titleInput" rows="2" placeholder="e.g. &quot;Bapa MRSM&quot;&#10;Pengasas Maktab Rendah Sains MARA (MRSM)"></textarea>
+      <p class="hint">Press Enter to control exactly where the second line breaks. Left blank, one line wraps automatically.</p>
+    </div>
+
+    <div class="field-group" id="dateGroupMuslim">
+      <h2><span class="n">5</span> Tarikh kembali ke Rahmatullah</h2>
+      <input type="text" id="dateGregInput" placeholder="e.g. 25 Ogos 2026">
+      <label class="label" style="margin:6px 0 0">Tarikh Hijrah</label>
+      <input type="text" id="dateHijriInput" placeholder="e.g. 12 Rabiulawal 1448H">
+      <p class="hint">Rendered as &ldquo;Telah kembali ke Rahmatullah pada&rdquo; followed by the Gregorian date, &ldquo;bersamaan&rdquo;, and the Hijri date.</p>
+    </div>
+
+    <div class="field-group" id="dateGroupNonMuslim" hidden>
+      <h2><span class="n">5</span> Tarikh meninggal dunia</h2>
+      <input type="text" id="dateSimpleInput" placeholder="e.g. 23 Jun 2026">
+      <p class="hint">Rendered as &ldquo;Meninggal dunia pada&rdquo; followed by the date.</p>
     </div>
 
     <div class="field-group">
