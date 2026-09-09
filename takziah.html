@@ -171,6 +171,42 @@
 
   .hint{ font-size:11.5px; color:var(--ink-soft); line-height:1.5; }
 
+  input[type=file]{
+    width:100%;
+    font:inherit;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    padding:9px 10px;
+    border-radius:8px;
+    border:1px dashed var(--line);
+    background:var(--surface);
+  }
+  input[type=file]::file-selector-button{
+    font:inherit;
+    font-size:12px;
+    font-weight:500;
+    padding:6px 10px;
+    margin-right:10px;
+    border-radius:6px;
+    border:1px solid var(--line);
+    background:var(--surface-2);
+    color:var(--ink);
+    cursor:pointer;
+  }
+
+  .ghost-btn{
+    align-self:flex-start;
+    font:inherit;
+    font-size:12px;
+    font-weight:500;
+    color:var(--danger);
+    background:none;
+    border:none;
+    padding:2px 0;
+    cursor:pointer;
+    text-decoration:underline;
+  }
+
   .toolbtns{ display:flex; gap:8px; }
   .toolbtns button{
     flex:1;
@@ -314,6 +350,13 @@
     </div>
 
     <div class="field-group">
+      <h2><span class="n">5</span> Gambar si mati <span style="font-weight:400;color:var(--ink-soft)">(pilihan)</span></h2>
+      <input type="file" id="photoInput" accept="image/*">
+      <p class="hint">Photo is automatically converted to black &amp; white, cropped to 250&times;250px with soft blurred edges.</p>
+      <button type="button" class="ghost-btn" id="removePhotoBtn" hidden>Remove photo</button>
+    </div>
+
+    <div class="field-group">
       <button class="primary" id="downloadBtn">&#8681; Save takziah graphic</button>
       <div class="status" id="statusLine"><span class="dot"></span><span>Fill in the details to compose the notice.</span></div>
     </div>
@@ -330,6 +373,7 @@
   var els = {};
   ["templateToggle","nameInput","titleInput",
    "dateGroupMuslim","dateGroupNonMuslim","dateGregInput","dateHijriInput","dateSimpleInput",
+   "photoInput","removePhotoBtn",
    "downloadBtn","statusLine","finalCanvas"
   ].forEach(function(id){ els[id] = document.getElementById(id); });
 
@@ -339,7 +383,8 @@
     title: "",
     dateGreg: "",
     dateHijri: "",
-    dateSimple: ""
+    dateSimple: "",
+    photoCanvas: null
   };
 
   function setStatus(msg, ok){
@@ -367,6 +412,80 @@
   bindText(els.dateGregInput, "dateGreg");
   bindText(els.dateHijriInput, "dateHijri");
   bindText(els.dateSimpleInput, "dateSimple");
+
+  var PHOTO_SIZE = 250;
+
+  function processPhoto(file){
+    return new Promise(function(resolve, reject){
+      var reader = new FileReader();
+      reader.onload = function(e){
+        var img = new Image();
+        img.onload = function(){
+          var size = PHOTO_SIZE;
+          var off = document.createElement("canvas");
+          off.width = size; off.height = size;
+          var octx = off.getContext("2d");
+
+          var srcW = img.naturalWidth || img.width;
+          var srcH = img.naturalHeight || img.height;
+          var scale = Math.max(size / srcW, size / srcH);
+          var dw = srcW * scale, dh = srcH * scale;
+          var dx = (size - dw) / 2, dy = (size - dh) / 2;
+          octx.drawImage(img, dx, dy, dw, dh);
+
+          var imgData = octx.getImageData(0, 0, size, size);
+          var d = imgData.data;
+          for(var i = 0; i < d.length; i += 4){
+            var gray = d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114;
+            d[i] = d[i + 1] = d[i + 2] = gray;
+          }
+          octx.putImageData(imgData, 0, 0);
+
+          var maskCanvas = document.createElement("canvas");
+          maskCanvas.width = size; maskCanvas.height = size;
+          var mctx = maskCanvas.getContext("2d");
+          var grad = mctx.createRadialGradient(size / 2, size / 2, size * 0.24, size / 2, size / 2, size * 0.5);
+          grad.addColorStop(0, "rgba(255,255,255,1)");
+          grad.addColorStop(0.55, "rgba(255,255,255,1)");
+          grad.addColorStop(1, "rgba(255,255,255,0)");
+          mctx.fillStyle = grad;
+          mctx.fillRect(0, 0, size, size);
+
+          octx.globalCompositeOperation = "destination-in";
+          octx.drawImage(maskCanvas, 0, 0);
+          octx.globalCompositeOperation = "source-over";
+
+          resolve(off);
+        };
+        img.onerror = function(){ reject(new Error("Could not load image")); };
+        img.src = e.target.result;
+      };
+      reader.onerror = function(){ reject(new Error("Could not read file")); };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  els.photoInput.addEventListener("change", function(){
+    var file = els.photoInput.files && els.photoInput.files[0];
+    if(!file) return;
+    setStatus("Processing photo…");
+    processPhoto(file).then(function(canvas){
+      state.photoCanvas = canvas;
+      els.removePhotoBtn.hidden = false;
+      setStatus("Photo added.");
+      renderFinal();
+    }).catch(function(){
+      setStatus("Couldn't process that image — try a different file.", false);
+    });
+  });
+
+  els.removePhotoBtn.addEventListener("click", function(){
+    state.photoCanvas = null;
+    els.photoInput.value = "";
+    els.removePhotoBtn.hidden = true;
+    setStatus("Photo removed.");
+    renderFinal();
+  });
 
   function truncateToWidth(ctx, text, maxWidth){
     if(ctx.measureText(text).width <= maxWidth) return text;
@@ -430,6 +549,10 @@
     muslim:    { d1: 757 / 1350, d2: 986 / 1350 },
     nonmuslim: { d1: 780 / 1350, d2: 979 / 1350 }
   };
+  var PHOTO_CENTER_Y = {
+    muslim:    528 / 1350,
+    nonmuslim: 503 / 1350
+  };
 
   function renderFinal(){
     var canvas = els.finalCanvas;
@@ -443,6 +566,13 @@
     var bgImg = BG_IMAGES[state.template];
     if(BG_READY[state.template] && bgImg){
       ctx.drawImage(bgImg, 0, 0, W, H);
+    }
+
+    if(state.photoCanvas){
+      var photoCenterY = H * PHOTO_CENTER_Y[state.template];
+      var photoX = (W - PHOTO_SIZE) / 2;
+      var photoY = photoCenterY - PHOTO_SIZE / 2;
+      ctx.drawImage(state.photoCanvas, photoX, photoY, PHOTO_SIZE, PHOTO_SIZE);
     }
 
     ctx.textAlign = "center";
