@@ -420,7 +420,7 @@
     <div class="field-group">
       <h2><span class="n">1</span> Gambar si mati <span style="font-weight:400;color:var(--ink-soft)">(pilihan)</span></h2>
       <input type="file" id="photoInput" accept="image/*">
-      <p class="hint">Photo is automatically converted to black &amp; white, cropped to 250&times;250px with soft blurred edges. On a wider screen the preview stays pinned beside these controls as you adjust it.</p>
+      <p class="hint">Photo is automatically converted to black &amp; white with soft blurred edges. On a wider screen the preview stays pinned beside these controls as you adjust it.</p>
 
       <div id="photoControls" hidden>
         <label class="label" style="margin-top:6px">Zoom</label>
@@ -431,6 +431,12 @@
 
         <label class="label" style="margin-top:10px">Position &mdash; up / down</label>
         <input type="range" id="photoPanYSlider" min="-1" max="1" step="0.01" value="0">
+
+        <label class="label" style="margin-top:10px">Photo size (placeholder)</label>
+        <input type="range" id="photoSizeSlider" min="150" max="380" step="5" value="250">
+
+        <label class="label" style="margin-top:10px">Contrast (black &amp; white)</label>
+        <input type="range" id="photoContrastSlider" min="-100" max="100" step="1" value="0">
       </div>
 
       <button type="button" class="ghost-btn" id="removePhotoBtn" hidden>Remove photo</button>
@@ -488,6 +494,7 @@
   ["templateToggle","nameInput","titleInput",
    "dateGroupMuslim","dateGroupNonMuslim","dateGregInput","dateHijriInput","dateSimpleInput",
    "photoInput","removePhotoBtn","photoControls","photoZoomSlider","photoPanXSlider","photoPanYSlider",
+   "photoSizeSlider","photoContrastSlider",
    "downloadBtn","statusLine","finalCanvas"
   ].forEach(function(id){ els[id] = document.getElementById(id); });
 
@@ -502,6 +509,8 @@
     photoZoom: 1,
     photoPanX: 0,
     photoPanY: 0,
+    photoFrameSize: 250,
+    photoContrast: 0,
     photoCanvas: null
   };
 
@@ -531,7 +540,9 @@
   bindText(els.dateHijriInput, "dateHijri");
   bindText(els.dateSimpleInput, "dateSimple");
 
-  var PHOTO_SIZE = 250;
+  // Working resolution for the photo bitmap (kept sharp regardless of how
+  // large the placeholder is later drawn on the final canvas).
+  var PHOTO_WORK = 400;
 
   function loadPhotoImage(file){
     return new Promise(function(resolve, reject){
@@ -550,7 +561,7 @@
   function updatePhotoCanvas(){
     var img = state.photoImg;
     if(!img) return;
-    var size = PHOTO_SIZE;
+    var size = PHOTO_WORK;
     var off = document.createElement("canvas");
     off.width = size; off.height = size;
     var octx = off.getContext("2d");
@@ -567,10 +578,17 @@
     var dy = dy0 + state.photoPanY * maxPanY;
     octx.drawImage(img, dx, dy, dw, dh);
 
+    // Grayscale, then apply the contrast adjustment (-100..100) using the
+    // standard Photoshop-style contrast formula so a flat/dull colour photo
+    // can be pushed to a crisper black & white.
+    var c = state.photoContrast * 2.55; // -255..255
+    var factor = (259 * (c + 255)) / (255 * (259 - c));
     var imgData = octx.getImageData(0, 0, size, size);
     var d = imgData.data;
     for(var i = 0; i < d.length; i += 4){
       var gray = d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114;
+      gray = factor * (gray - 128) + 128;
+      if(gray < 0) gray = 0; else if(gray > 255) gray = 255;
       d[i] = d[i + 1] = d[i + 2] = gray;
     }
     octx.putImageData(imgData, 0, 0);
@@ -601,13 +619,17 @@
       state.photoZoom = 1;
       state.photoPanX = 0;
       state.photoPanY = 0;
+      state.photoFrameSize = 250;
+      state.photoContrast = 0;
       els.photoZoomSlider.value = "1";
       els.photoPanXSlider.value = "0";
       els.photoPanYSlider.value = "0";
+      els.photoSizeSlider.value = "250";
+      els.photoContrastSlider.value = "0";
       updatePhotoCanvas();
       els.photoControls.hidden = false;
       els.removePhotoBtn.hidden = false;
-      setStatus("Photo added. Use the sliders to zoom and reposition.");
+      setStatus("Photo added. Use the sliders to zoom, resize and adjust contrast.");
       renderFinal();
     }).catch(function(){
       setStatus("Couldn't process that image — try a different file.", false);
@@ -624,6 +646,14 @@
   bindPhotoSlider(els.photoZoomSlider, "photoZoom");
   bindPhotoSlider(els.photoPanXSlider, "photoPanX");
   bindPhotoSlider(els.photoPanYSlider, "photoPanY");
+  bindPhotoSlider(els.photoContrastSlider, "photoContrast");
+
+  // Frame size only changes how large the placeholder is drawn on the
+  // final canvas — no need to recompute the underlying photo bitmap.
+  els.photoSizeSlider.addEventListener("input", function(){
+    state.photoFrameSize = parseFloat(els.photoSizeSlider.value);
+    renderFinal();
+  });
 
   els.removePhotoBtn.addEventListener("click", function(){
     state.photoImg = null;
@@ -631,10 +661,14 @@
     state.photoZoom = 1;
     state.photoPanX = 0;
     state.photoPanY = 0;
+    state.photoFrameSize = 250;
+    state.photoContrast = 0;
     els.photoInput.value = "";
     els.photoZoomSlider.value = "1";
     els.photoPanXSlider.value = "0";
     els.photoPanYSlider.value = "0";
+    els.photoSizeSlider.value = "250";
+    els.photoContrastSlider.value = "0";
     els.photoControls.hidden = true;
     els.removePhotoBtn.hidden = true;
     setStatus("Photo removed.");
@@ -723,10 +757,11 @@
     }
 
     if(state.photoCanvas){
+      var frameSize = state.photoFrameSize;
       var photoCenterY = H * PHOTO_CENTER_Y[state.template];
-      var photoX = (W - PHOTO_SIZE) / 2;
-      var photoY = photoCenterY - PHOTO_SIZE / 2;
-      ctx.drawImage(state.photoCanvas, photoX, photoY, PHOTO_SIZE, PHOTO_SIZE);
+      var photoX = (W - frameSize) / 2;
+      var photoY = photoCenterY - frameSize / 2;
+      ctx.drawImage(state.photoCanvas, photoX, photoY, frameSize, frameSize);
     }
 
     ctx.textAlign = "center";
