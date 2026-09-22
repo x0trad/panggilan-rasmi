@@ -571,6 +571,11 @@
 (function(){
   "use strict";
 
+  var callIconImg = new Image();
+  var callIconReady = false;
+  callIconImg.onload = function(){ callIconReady = true; renderFinal(); };
+  callIconImg.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAOdEVYdFNvZnR3YXJlAEZpZ21hnrGWYwAAAkFJREFUeAG1V4FVwyAQpU6QEXACO0JGqBOYDcwGdYN2A3QCdQLcICPQDTrClzOg9DgIsfrfu/ea3Of4HJeDKiUAQO/NeHOYMXnbqf+Gn0R7syhjuzD2NYg90LNagxDAoQ5TGX+U+E1CGicnnL11hRjPlXH7JQFGGEQr6pBvydMvF3EoTb4VyEPi75nvXIjTJfFK2TAtqzcCxzLOjvkfMW8PQjxdycjIg0+MoAUBI+NY5nfCRHvMW8jjny/m4E5VSC9+VhjRVxYRYQoibEmAUwV43xPjHhNf7AESqCdIdfbVU25UO07s+S7+2Gw2J2/3/uettzfGoz2nAn1h73dRvUtlKXn1UkGNqgDkRUvP/GuaIrmlCA3jOBQaUiI4xVcDw+UiTCTzFjqwYANy9GoByLPQBWHPYc6uNMGRBXLMb1QDwmRTWP24RLxIV+LruA9rT7lGtbaUYuTf/6j+Gsi/cVvxkaBtIQ5lbI+5JxhU7g/SQLHTIa9ehGfNYvSQW7IFK+zWLFCw9IQ7C5kYg8ADluEwH1p6TRYOiX/A38GIQpCfeoRxpQhaBGWTvne3wO0lEVYgPiR+XQlMYzWLN9T4pa2QBoxCzURevdmo7yLNbkolskZeD4S9xFWNQN70php5W8gEvfvVnxQ0XP8kxZIIgl0jxHMfhBh9y8DabSdmxJAYCJ0vjJf6RNOhlgaqVbMkylX49F6rtcDPeX4NHK49UYMQysi0cnLLJ9+oKxEC9t5o/+miqoNFnLy9e3vzF9cPPv4TmTZN7gZq7EsAAAAASUVORK5CYII=";
+
   var COUNTRIES = [
     ["MY","Malaysia","🇲🇾"],
     ["US","United States","🇺🇸"],
@@ -1130,14 +1135,10 @@
       ctx.fillStyle = iconGrad;
       ctx.fillRect(cardX, cardY, iconW, cardH);
 
-      var phonePath = new Path2D("M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z");
-      var pScale = (iconW*0.46)/24;
-      ctx.save();
-      ctx.translate(cardX + iconW/2 - pScale*12, iconY + baseH/2 - pScale*12);
-      ctx.scale(pScale, pScale);
-      ctx.fillStyle = "#fff";
-      ctx.fill(phonePath);
-      ctx.restore();
+      if(callIconReady){
+        var iconDim = iconW * 0.6;
+        ctx.drawImage(callIconImg, cardX + (iconW - iconDim) / 2, iconY + (baseH - iconDim) / 2, iconDim, iconDim);
+      }
 
       ctx.restore();
 
